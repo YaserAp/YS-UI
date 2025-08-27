@@ -280,7 +280,7 @@ function YSSHLibrary:CreateWindow(settings)
   local title = make("TextLabel", {
     BackgroundTransparency = 1,
     Position = UDim2.new(0, 16, 0, 0),
-    Size = UDim2.new(1, -32, 1, 0),
+    Size = UDim2.new(1, -80, 1, 0),
     Font = Enum.Font.GothamBold,
     Text = (settings.Name or settings.Title or "YSSH UI"),
     TextColor3 = self.Theme.Text,
@@ -289,18 +289,57 @@ function YSSHLibrary:CreateWindow(settings)
   })
   title.Parent = topbar
 
-  local toggleHint = make("TextLabel", {
-    BackgroundTransparency = 1,
-    AnchorPoint = Vector2.new(1, 0),
-    Position = UDim2.new(1, -12, 0, 0),
-    Size = UDim2.new(0, 150, 1, 0),
-    Font = Enum.Font.Gotham,
-   --Text = "Toggle: "..(settings.ToggleUIKeybind or "K"),
-    TextColor3 = self.Theme.SubText,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Right,
-  })
-  toggleHint.Parent = topbar
+  local closeBtn = make("TextButton", {
+    Name = "CloseButton",
+    AnchorPoint = Vector2.new(1, 0.5),
+    Position = UDim2.new(1, -12, 0.5, 0),
+    Size = UDim2.new(0, 20, 0, 20),
+    BackgroundColor3 = self.Theme.Topbar,
+    Font = Enum.Font.GothamBold,
+    Text = "X",
+    TextColor3 = self.Theme.Text,
+    TextSize = 14,
+    AutoButtonColor = false,
+  }, { make("UICorner", {CornerRadius = UDim.new(0, 4)}) })
+  closeBtn.Parent = topbar
+
+  local minimizeBtn = make("TextButton", {
+    Name = "MinimizeButton",
+    AnchorPoint = Vector2.new(1, 0.5),
+    Position = UDim2.new(1, -40, 0.5, 0),
+    Size = UDim2.new(0, 20, 0, 20),
+    BackgroundColor3 = self.Theme.Topbar,
+    Font = Enum.Font.GothamBold,
+    Text = "_",
+    TextColor3 = self.Theme.Text,
+    TextSize = 14,
+    AutoButtonColor = false,
+  }, { make("UICorner", {CornerRadius = UDim.new(0, 4)}) })
+  minimizeBtn.Parent = topbar
+
+  closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+  end)
+
+  local isMinimized = false
+  local originalSize = main.Size
+  minimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+      content.Visible = false
+      tabbar.Visible = false
+      tween(main, TweenInfo.new(0.2), { Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40) }):Play()
+    else
+      content.Visible = true
+      tabbar.Visible = true
+      tween(main, TweenInfo.new(0.2), { Size = originalSize }):Play()
+    end
+  end)
+
+  closeBtn.MouseEnter:Connect(function() tween(closeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Bad }):Play() end)
+  closeBtn.MouseLeave:Connect(function() tween(closeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Topbar }):Play() end)
+  minimizeBtn.MouseEnter:Connect(function() tween(minimizeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Stroke }):Play() end)
+  minimizeBtn.MouseLeave:Connect(function() tween(minimizeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Topbar }):Play() end)
 
   makeDraggable(main, topbar)
 
