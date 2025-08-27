@@ -270,7 +270,7 @@ function YSSHLibrary:CreateWindow(settings)
     Position = UDim2.new(1, -12, 0, 0),
     Size = UDim2.new(0, 150, 1, 0),
     Font = Enum.Font.Gotham,
-    Text = "Toggle: "..(settings.ToggleUIKeybind or "K"),
+    --Text = "Toggle: "..(settings.ToggleUIKeybind or "K"),
     TextColor3 = self.Theme.SubText,
     TextSize = 13,
     TextXAlignment = Enum.TextXAlignment.Right,
