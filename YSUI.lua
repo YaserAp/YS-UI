@@ -44,7 +44,7 @@ ContentFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 
 -- Tombol Show UI
 ShowUIButton.Size = UDim2.new(0, 120, 0, 40)
-ShowUIButton.Position = UDim2.new(0.5, -60, 0, 20)
+ShowUIButton.Position = UDim2.new(0.5, -60, 0, 10)
 ShowUIButton.Text = "Show UI"
 ShowUIButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ShowUIButton.Visible = false
