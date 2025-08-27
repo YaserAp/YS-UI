@@ -1,144 +1,151 @@
--- YSUI.lua
+-- YS UI System (Update with Minimize + Draggable Show UI)
+
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
-local YSUI = {}
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Buat Window
-function YSUI:CreateWindow(settings)
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = settings.Name or "YSUI"
-    ScreenGui.ResetOnSpawn = false
-    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-
-    local Window = Instance.new("Frame")
-    Window.Size = UDim2.new(0, 300, 0, 250)
-    Window.Position = UDim2.new(0.5, -150, 0.5, -125)
-    Window.BackgroundColor3 = Color3.fromRGB(25,25,25)
-    Window.Active = true
-    Window.Draggable = true
-    Window.Parent = ScreenGui
-
-    local Title = Instance.new("TextLabel", Window)
-    Title.Size = UDim2.new(1,0,0,30)
-    Title.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    Title.Text = settings.Title or "YSUI Window"
-    Title.TextColor3 = Color3.fromRGB(255,255,255)
-    Title.Font = Enum.Font.SourceSansBold
-    Title.TextSize = 18
-
-    -- Container isi tab
-    local Content = Instance.new("Frame", Window)
-    Content.Size = UDim2.new(1, -20, 1, -50)
-    Content.Position = UDim2.new(0,10,0,40)
-    Content.BackgroundTransparency = 1
-
-    local Layout = Instance.new("UIListLayout", Content)
-    Layout.Padding = UDim.new(0, 5)
-
-    -- ==========================================
-    -- Window Control: Close, Minimize, Hide
-    -- ==========================================
-    local CloseBtn = Instance.new("TextButton", Window)
-    CloseBtn.Size = UDim2.new(0,30,0,30)
-    CloseBtn.Position = UDim2.new(1,-35,0,0)
-    CloseBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
-    CloseBtn.Text = "X"
-    CloseBtn.TextColor3 = Color3.new(1,1,1)
-    CloseBtn.Font = Enum.Font.SourceSansBold
-    CloseBtn.TextSize = 16
-    CloseBtn.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-    end)
-
-    local MinBtn = Instance.new("TextButton", Window)
-    MinBtn.Size = UDim2.new(0,30,0,30)
-    MinBtn.Position = UDim2.new(1,-70,0,0)
-    MinBtn.BackgroundColor3 = Color3.fromRGB(100,100,0)
-    MinBtn.Text = "-"
-    MinBtn.TextColor3 = Color3.new(1,1,1)
-    MinBtn.Font = Enum.Font.SourceSansBold
-    MinBtn.TextSize = 16
-
-    local minimized = false
-    MinBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        Content.Visible = not minimized
-    end)
-
-    local HideBtn = Instance.new("TextButton", Window)
-    HideBtn.Size = UDim2.new(0,30,0,30)
-    HideBtn.Position = UDim2.new(1,-105,0,0)
-    HideBtn.BackgroundColor3 = Color3.fromRGB(0,100,150)
-    HideBtn.Text = "H"
-    HideBtn.TextColor3 = Color3.new(1,1,1)
-    HideBtn.Font = Enum.Font.SourceSansBold
-    HideBtn.TextSize = 16
-
-    HideBtn.MouseButton1Click:Connect(function()
-        Window.Visible = false
-        local Restore = Instance.new("TextButton", ScreenGui)
-        Restore.Size = UDim2.new(0,100,0,40)
-        Restore.Position = UDim2.new(0,10,1,-50)
-        Restore.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        Restore.Text = "Show UI"
-        Restore.TextColor3 = Color3.new(1,1,1)
-        Restore.Font = Enum.Font.SourceSans
-        Restore.TextSize = 16
-        Restore.MouseButton1Click:Connect(function()
-            Window.Visible = true
-            Restore:Destroy()
-        end)
-    end)
-
-    -- ==========================================
-    -- API untuk buat elemen
-    -- ==========================================
-    local API = {}
-
-    function API:CreateButton(text, callback)
-        local btn = Instance.new("TextButton", Content)
-        btn.Size = UDim2.new(1,0,0,40)
-        btn.Text = text
-        btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-        btn.TextColor3 = Color3.fromRGB(255,255,255)
-        btn.Font = Enum.Font.SourceSans
-        btn.TextSize = 16
-        btn.MouseButton1Click:Connect(function()
-            if callback then callback() end
-        end)
-        return btn
-    end
-
-    function API:CreateToggle(text, default, callback)
-        local frame = Instance.new("Frame", Content)
-        frame.Size = UDim2.new(1,0,0,40)
-        frame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-
-        local btn = Instance.new("TextButton", frame)
-        btn.Size = UDim2.new(0,40,1,0)
-        btn.BackgroundColor3 = default and Color3.fromRGB(0,150,0) or Color3.fromRGB(150,0,0)
-
-        local label = Instance.new("TextLabel", frame)
-        label.Size = UDim2.new(1,-50,1,0)
-        label.Position = UDim2.new(0,50,0,0)
-        label.BackgroundTransparency = 1
-        label.Text = text..": "..(default and "ON" or "OFF")
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.TextXAlignment = Enum.TextXAlignment.Left
-
-        local state = default
-        btn.MouseButton1Click:Connect(function()
-            state = not state
-            btn.BackgroundColor3 = state and Color3.fromRGB(0,150,0) or Color3.fromRGB(150,0,0)
-            label.Text = text..": "..(state and "ON" or "OFF")
-            if callback then callback(state) end
-        end)
-
-        return frame
-    end
-
-    return API
+-- Hapus UI lama kalau ada
+if playerGui:FindFirstChild("YS_UI") then
+    playerGui.YS_UI:Destroy()
 end
 
-return YSUI
+-- Buat ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "YS_UI"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- Window Utama
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 400, 0, 250)
+mainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
+mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Title bar
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1, 0, 0, 30)
+titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+titleBar.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -90, 1, 0)
+title.BackgroundTransparency = 1
+title.Text = "YS Script Hub"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+title.Parent = titleBar
+
+-- Content frame
+local contentFrame = Instance.new("Frame")
+contentFrame.Size = UDim2.new(1, -20, 1, -50)
+contentFrame.Position = UDim2.new(0, 10, 0, 40)
+contentFrame.BackgroundTransparency = 1
+contentFrame.Parent = mainFrame
+
+-- Contoh button
+local testButton = Instance.new("TextButton")
+testButton.Size = UDim2.new(1, 0, 0, 40)
+testButton.Position = UDim2.new(0, 0, 0, 0)
+testButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+testButton.Text = "Test Button"
+testButton.TextColor3 = Color3.new(1, 1, 1)
+testButton.Parent = contentFrame
+
+-- Tombol kontrol (Hide, Minimize, Close)
+local hideBtn = Instance.new("TextButton")
+hideBtn.Size = UDim2.new(0, 30, 0, 30)
+hideBtn.Position = UDim2.new(1, -90, 0, 0)
+hideBtn.Text = "H"
+hideBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
+hideBtn.TextColor3 = Color3.new(1,1,1)
+hideBtn.Parent = titleBar
+
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+minimizeBtn.Text = "-"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(140, 140, 0)
+minimizeBtn.TextColor3 = Color3.new(1,1,1)
+minimizeBtn.Parent = titleBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 30, 0, 30)
+closeBtn.Position = UDim2.new(1, -30, 0, 0)
+closeBtn.Text = "X"
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.Parent = titleBar
+
+-- Tombol Show UI (draggable)
+local showBtn = Instance.new("TextButton")
+showBtn.Size = UDim2.new(0, 100, 0, 40)
+showBtn.Position = UDim2.new(0.5, -50, 0, 10) -- atas tengah
+showBtn.Text = "Show UI"
+showBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+showBtn.TextColor3 = Color3.new(1, 1, 1)
+showBtn.Visible = false
+showBtn.Parent = screenGui
+
+-- Fungsi tombol
+hideBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    showBtn.Visible = true
+end)
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    contentFrame.Visible = not contentFrame.Visible
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+    showBtn.Visible = true
+end)
+
+showBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = true
+    showBtn.Visible = false
+end)
+
+-- Fungsi draggable untuk Show UI
+local dragging = false
+local dragInput, mousePos, framePos
+
+local function update(input)
+    local delta = input.Position - mousePos
+    showBtn.Position = UDim2.new(
+        framePos.X.Scale, framePos.X.Offset + delta.X,
+        framePos.Y.Scale, framePos.Y.Offset + delta.Y
+    )
+end
+
+showBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        mousePos = input.Position
+        framePos = showBtn.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+showBtn.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
