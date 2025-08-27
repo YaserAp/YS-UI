@@ -1,151 +1,104 @@
--- YS UI System (Update with Minimize + Draggable Show UI)
+local ScreenGui = Instance.new("ScreenGui", game.Players.LocalPlayer.PlayerGui)
+local MainFrame = Instance.new("Frame", ScreenGui)
+local TitleBar = Instance.new("Frame", MainFrame)
+local TitleLabel = Instance.new("TextLabel", TitleBar)
+local MinimizeBtn = Instance.new("TextButton", TitleBar)
+local CloseBtn = Instance.new("TextButton", TitleBar)
+local ContentFrame = Instance.new("Frame", MainFrame)
+local ShowUIButton = Instance.new("TextButton", ScreenGui)
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+-- Styling
+ScreenGui.ResetOnSpawn = false
 
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+MainFrame.Size = UDim2.new(0, 400, 0, 250)
+MainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
+MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+MainFrame.Visible = true
 
--- Hapus UI lama kalau ada
-if playerGui:FindFirstChild("YS_UI") then
-    playerGui.YS_UI:Destroy()
-end
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 
--- Buat ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "YS_UI"
-screenGui.Parent = playerGui
-screenGui.ResetOnSpawn = false
+TitleLabel.Size = UDim2.new(1, -60, 1, 0)
+TitleLabel.Text = "YS Script Hub"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextSize = 18
 
--- Window Utama
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, 400, 0, 250)
-mainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
-mainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-mainFrame.Active = true
-mainFrame.Draggable = true
-mainFrame.Parent = screenGui
+-- Tombol Minimize
+MinimizeBtn.Size = UDim2.new(0, 30, 1, 0)
+MinimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+MinimizeBtn.Text = "-"
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(170, 170, 0)
 
--- Title bar
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 30)
-titleBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-titleBar.Parent = mainFrame
+-- Tombol Close
+CloseBtn.Size = UDim2.new(0, 30, 1, 0)
+CloseBtn.Position = UDim2.new(1, -30, 0, 0)
+CloseBtn.Text = "X"
+CloseBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -90, 1, 0)
-title.BackgroundTransparency = 1
-title.Text = "YS Script Hub"
-title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 18
-title.Parent = titleBar
+-- Konten
+ContentFrame.Size = UDim2.new(1, -20, 1, -50)
+ContentFrame.Position = UDim2.new(0, 10, 0, 40)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 
--- Content frame
-local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, -20, 1, -50)
-contentFrame.Position = UDim2.new(0, 10, 0, 40)
-contentFrame.BackgroundTransparency = 1
-contentFrame.Parent = mainFrame
+-- Tombol Show UI
+ShowUIButton.Size = UDim2.new(0, 120, 0, 40)
+ShowUIButton.Position = UDim2.new(0.5, -60, 0, 20)
+ShowUIButton.Text = "Show UI"
+ShowUIButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ShowUIButton.Visible = false
 
--- Contoh button
-local testButton = Instance.new("TextButton")
-testButton.Size = UDim2.new(1, 0, 0, 40)
-testButton.Position = UDim2.new(0, 0, 0, 0)
-testButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-testButton.Text = "Test Button"
-testButton.TextColor3 = Color3.new(1, 1, 1)
-testButton.Parent = contentFrame
+-- === Functionalitas ===
 
--- Tombol kontrol (Hide, Minimize, Close)
-local hideBtn = Instance.new("TextButton")
-hideBtn.Size = UDim2.new(0, 30, 0, 30)
-hideBtn.Position = UDim2.new(1, -90, 0, 0)
-hideBtn.Text = "H"
-hideBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
-hideBtn.TextColor3 = Color3.new(1,1,1)
-hideBtn.Parent = titleBar
-
-local minimizeBtn = Instance.new("TextButton")
-minimizeBtn.Size = UDim2.new(0, 30, 0, 30)
-minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
-minimizeBtn.Text = "-"
-minimizeBtn.BackgroundColor3 = Color3.fromRGB(140, 140, 0)
-minimizeBtn.TextColor3 = Color3.new(1,1,1)
-minimizeBtn.Parent = titleBar
-
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -30, 0, 0)
-closeBtn.Text = "X"
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-closeBtn.TextColor3 = Color3.new(1,1,1)
-closeBtn.Parent = titleBar
-
--- Tombol Show UI (draggable)
-local showBtn = Instance.new("TextButton")
-showBtn.Size = UDim2.new(0, 100, 0, 40)
-showBtn.Position = UDim2.new(0.5, -50, 0, 10) -- atas tengah
-showBtn.Text = "Show UI"
-showBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-showBtn.TextColor3 = Color3.new(1, 1, 1)
-showBtn.Visible = false
-showBtn.Parent = screenGui
-
--- Fungsi tombol
-hideBtn.MouseButton1Click:Connect(function()
-    mainFrame.Visible = false
-    showBtn.Visible = true
+-- Close → Hilangin Window, munculin tombol Show UI
+CloseBtn.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	ShowUIButton.Visible = true
 end)
 
-minimizeBtn.MouseButton1Click:Connect(function()
-    contentFrame.Visible = not contentFrame.Visible
+-- Show UI → Balikin Window
+ShowUIButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = true
+	ShowUIButton.Visible = false
 end)
 
-closeBtn.MouseButton1Click:Connect(function()
-    mainFrame.Visible = false
-    showBtn.Visible = true
+-- Minimize → Kecilkan frame, bukan sembunyikan
+local minimized = false
+MinimizeBtn.MouseButton1Click:Connect(function()
+	if minimized then
+		MainFrame.Size = UDim2.new(0, 400, 0, 250)
+		minimized = false
+	else
+		MainFrame.Size = UDim2.new(0, 400, 0, 40) -- jadi taskbar mini
+		minimized = true
+	end
 end)
 
-showBtn.MouseButton1Click:Connect(function()
-    mainFrame.Visible = true
-    showBtn.Visible = false
-end)
-
--- Fungsi draggable untuk Show UI
+-- Bisa drag tombol Show UI
 local dragging = false
 local dragInput, mousePos, framePos
 
-local function update(input)
-    local delta = input.Position - mousePos
-    showBtn.Position = UDim2.new(
-        framePos.X.Scale, framePos.X.Offset + delta.X,
-        framePos.Y.Scale, framePos.Y.Offset + delta.Y
-    )
-end
-
-showBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        mousePos = input.Position
-        framePos = showBtn.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
+ShowUIButton.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		mousePos = input.Position
+		framePos = ShowUIButton.Position
+	end
 end)
 
-showBtn.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
+ShowUIButton.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+		local delta = input.Position - mousePos
+		ShowUIButton.Position = UDim2.new(
+			framePos.X.Scale, framePos.X.Offset + delta.X,
+			framePos.Y.Scale, framePos.Y.Offset + delta.Y
+		)
+	end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
+game:GetService("UserInputService").InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = false
+	end
 end)
