@@ -1,7 +1,7 @@
 --[[
 
 YSSH Interface Suite
-by Sirius
+by YSSH
 
 shlex | Designing + Programming
 iRay  | Programming
@@ -883,7 +883,7 @@ function YSSHLibrary:CreateWindow(Settings)
 	Main.Shadow.Image.ImageTransparency = 1
 	LoadingFrame.Version.TextTransparency = 1
 	LoadingFrame.Title.Text = Settings.LoadingTitle or "YSSH Interface Suite"
-	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "by Sirius"
+	LoadingFrame.Subtitle.Text = Settings.LoadingSubtitle or "by YSSH"
 	if Settings.LoadingTitle ~= "YSSH Interface Suite" then
 		LoadingFrame.Version.Text = "YSSH UI"
 	end
