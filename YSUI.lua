@@ -321,21 +321,6 @@ function YSSHLibrary:CreateWindow(settings)
     gui:Destroy()
   end)
 
-  local isMinimized = false
-  local originalSize = main.Size
-  minimizeBtn.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    if isMinimized then
-      content.Visible = false
-      tabbar.Visible = false
-      tween(main, TweenInfo.new(0.2), { Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40) }):Play()
-    else
-      content.Visible = true
-      tabbar.Visible = true
-      tween(main, TweenInfo.new(0.2), { Size = originalSize }):Play()
-    end
-  end)
-
   closeBtn.MouseEnter:Connect(function() tween(closeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Bad }):Play() end)
   closeBtn.MouseLeave:Connect(function() tween(closeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Topbar }):Play() end)
   minimizeBtn.MouseEnter:Connect(function() tween(minimizeBtn, TweenInfo.new(0.1), { BackgroundColor3 = self.Theme.Stroke }):Play() end)
@@ -378,6 +363,21 @@ function YSSHLibrary:CreateWindow(settings)
 
   local pageFolder = make("Folder", {Name = "Pages"}, {})
   pageFolder.Parent = content
+
+  local isMinimized = false
+  local originalSize = main.Size
+  minimizeBtn.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    if isMinimized then
+      content.Visible = false
+      tabbar.Visible = false
+      tween(main, TweenInfo.new(0.2), { Size = UDim2.new(originalSize.X.Scale, originalSize.X.Offset, 0, 40) }):Play()
+    else
+      content.Visible = true
+      tabbar.Visible = true
+      tween(main, TweenInfo.new(0.2), { Size = originalSize }):Play()
+    end
+  end)
 
   local function switchTo(page)
     for _, p in ipairs(pageFolder:GetChildren()) do
