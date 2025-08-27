@@ -1,94 +1,127 @@
+--[[ 
+YS Custom Hub (Modifikasi dari Rayfield)
+Sudah dihapus semua yang berhubungan dengan Rayfield
+--]]
+
 local Players = game:GetService("Players")
-local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 
 -- GUI utama
-local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "YS_CustomHub"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 -- Frame utama
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 400, 0, 250)
-MainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
-MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 420, 0, 260)
+MainFrame.Position = UDim2.new(0.5, -210, 0.5, -130)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 40, 55) -- biru abu modern
+MainFrame.BorderSizePixel = 0
 MainFrame.Visible = true
-MainFrame.Active = true -- penting untuk drag
+MainFrame.Active = true
+MainFrame.Parent = ScreenGui
 
 -- Title bar
-local TitleBar = Instance.new("Frame", MainFrame)
+local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 30)
-TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
 TitleBar.Active = true
+TitleBar.Parent = MainFrame
 
-local TitleLabel = Instance.new("TextLabel", TitleBar)
+local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, -60, 1, 0)
-TitleLabel.Text = "YS Script Hub"
+TitleLabel.Text = "YS Custom Hub"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Font = Enum.Font.GothamBold
 TitleLabel.TextSize = 18
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Parent = TitleBar
 
--- Tombol Minimize
-local MinimizeBtn = Instance.new("TextButton", TitleBar)
+-- Tombol minimize
+local MinimizeBtn = Instance.new("TextButton")
 MinimizeBtn.Size = UDim2.new(0, 30, 1, 0)
 MinimizeBtn.Position = UDim2.new(1, -60, 0, 0)
 MinimizeBtn.Text = "-"
-MinimizeBtn.BackgroundColor3 = Color3.fromRGB(170, 170, 0)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.TextSize = 18
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+MinimizeBtn.Parent = TitleBar
 
--- Tombol Close
-local CloseBtn = Instance.new("TextButton", TitleBar)
+-- Tombol close
+local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 30, 1, 0)
 CloseBtn.Position = UDim2.new(1, -30, 0, 0)
 CloseBtn.Text = "X"
-CloseBtn.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+CloseBtn.Parent = TitleBar
 
 -- Konten
-local ContentFrame = Instance.new("Frame", MainFrame)
+local ContentFrame = Instance.new("Frame")
 ContentFrame.Size = UDim2.new(1, -20, 1, -50)
 ContentFrame.Position = UDim2.new(0, 10, 0, 40)
-ContentFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ContentFrame.BackgroundColor3 = Color3.fromRGB(50, 55, 70)
+ContentFrame.Parent = MainFrame
+
+local ContentLabel = Instance.new("TextLabel")
+ContentLabel.Size = UDim2.new(1, 0, 1, 0)
+ContentLabel.BackgroundTransparency = 1
+ContentLabel.Text = "Selamat datang di YS Custom Hub!"
+ContentLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+ContentLabel.Font = Enum.Font.Gotham
+ContentLabel.TextSize = 16
+ContentLabel.Parent = ContentFrame
 
 -- Tombol Show UI
-local ShowUIButton = Instance.new("TextButton", ScreenGui)
+local ShowUIButton = Instance.new("TextButton")
 ShowUIButton.Size = UDim2.new(0, 120, 0, 40)
-ShowUIButton.AnchorPoint = Vector2.new(0.5, 0) 
-ShowUIButton.Position = UDim2.new(0.5, 0, 0.5, -100) 
+ShowUIButton.AnchorPoint = Vector2.new(0.5, 0)
+ShowUIButton.Position = UDim2.new(0.5, 0, 0.5, -100) -- tepat di atas logo tengah
 ShowUIButton.Text = "Show UI"
-ShowUIButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ShowUIButton.Font = Enum.Font.GothamBold
+ShowUIButton.TextSize = 16
+ShowUIButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ShowUIButton.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
 ShowUIButton.Visible = false
 ShowUIButton.Active = true
+ShowUIButton.Parent = ScreenGui
 
 -- === Functionalitas ===
 
--- Close → Hilangin Window, munculin tombol Show UI
+-- Close
 CloseBtn.MouseButton1Click:Connect(function()
 	MainFrame.Visible = false
 	ShowUIButton.Visible = true
 end)
 
--- Show UI → Balikin Window
+-- Show UI
 ShowUIButton.MouseButton1Click:Connect(function()
 	MainFrame.Visible = true
 	ShowUIButton.Visible = false
 end)
 
--- Minimize → Kecilkan frame, bukan sembunyikan
+-- Minimize
 local minimized = false
 MinimizeBtn.MouseButton1Click:Connect(function()
 	if minimized then
-		MainFrame.Size = UDim2.new(0, 400, 0, 250)
+		MainFrame.Size = UDim2.new(0, 420, 0, 260)
 		minimized = false
 	else
-		MainFrame.Size = UDim2.new(0, 400, 0, 40) -- jadi taskbar mini
+		MainFrame.Size = UDim2.new(0, 420, 0, 40)
 		minimized = true
 	end
 end)
 
--- Bisa drag tombol Show UI
+-- Drag Show UI
 local dragging = false
-local dragInput, mousePos, framePos
+local mousePos, framePos
 
 ShowUIButton.InputBegan:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -114,7 +147,7 @@ UserInputService.InputEnded:Connect(function(input)
 	end
 end)
 
--- === Drag MainFrame (lewat TitleBar) ===
+-- Drag MainFrame (via TitleBar)
 local frameDragging = false
 local frameMousePos, frameStartPos
 
@@ -141,4 +174,3 @@ UserInputService.InputEnded:Connect(function(input)
 		frameDragging = false
 	end
 end)
-
