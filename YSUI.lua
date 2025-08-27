@@ -412,10 +412,11 @@ function YSSHLibrary:CreateWindow(settings)
   function window:CreateTab(name, iconId)
     name = name or "Tab"
     local tabBtn = make("TextButton", {
-      Size = UDim2.new(1, -0, 0, 34),
+      Name = "TabButton",
+      Size = UDim2.new(1, 0, 0, 34),
       BackgroundColor3 = Color3.fromRGB(0,0,0),
       BackgroundTransparency = 0.7,
-      Text = "  "..name,
+      Text = "", -- Text will be handled by a separate label
       Font = Enum.Font.Gotham,
       TextColor3 = YSSHLibrary.Theme.Text,
       TextSize = 14,
@@ -427,14 +428,29 @@ function YSSHLibrary:CreateWindow(settings)
 
     if iconId and tonumber(iconId) then
       local icon = make("ImageLabel", {
+        Name = "Icon",
         BackgroundTransparency = 1,
         Image = "rbxassetid://"..tostring(iconId),
         Size = UDim2.new(0, 18, 0, 18),
-        Position = UDim2.new(0, 8, 0.5, -9),
+        Position = UDim2.new(0, 12, 0.5, -9),
       })
       icon.Parent = tabBtn
-      tabBtn.TextXAlignment = Enum.TextXAlignment.Left
-      tabBtn.Text = "      "..name
+
+      local label = make("TextLabel", {
+        Name = "Label",
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, -42, 1, 0),
+        Position = UDim2.new(0, 40, 0, 0),
+        Font = Enum.Font.Gotham,
+        Text = name,
+        TextColor3 = YSSHLibrary.Theme.Text,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+      })
+      label.Parent = tabBtn
+    else
+      -- No icon, just use the button's text property with padding
+      tabBtn.Text = "    "..name
     end
 
     tabBtn.Parent = tabList
