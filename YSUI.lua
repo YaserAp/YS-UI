@@ -1,690 +1,264 @@
---[[
-  YSUI.lua — YSSH Library (Rayfield‑style)
-  API (intended 1:1 where practical):
-    local YSUI = loadstring(game:HttpGet("<raw-url>/YSUI.lua"))()
-    local Window = YSUI:CreateWindow({
-      Name = "YS Script Hub",
-      Icon = 0,
-      LoadingTitle = "Loading...",
-      LoadingSubtitle = "by You",
-      ShowText = "YS",
-      Theme = "Default",
-      ToggleUIKeybind = "K",
-      DisableRayfieldPrompts = false,
-      DisableBuildWarnings = false,
-      ConfigurationSaving = { Enabled = true, FolderName = "YSSH", FileName = "config" },
-      Discord = { Enabled = false, Invite = "", RememberJoins = false },
-      KeySystem = false,
-      KeySettings = { Title = "", Subtitle = "", Note = "", FileName = "", SaveKey = true, GrabKeyFromSite = false, Key = {"Hello"} },
-    })
+local YSSHLibrary = {}
+YSSHLibrary.Flags = {}
 
-    local Tab = Window:CreateTab("Player", 4483362458)
-    local Toggle = Tab:CreateToggle({ Name = "Infinite Jump", CurrentValue = false, Flag = "InfJump", Callback = function(v) end })
-    local Slider = Tab:CreateSlider({ Name = "WalkSpeed", Range = {1, 100}, Increment = 1, Suffix = "Speed", CurrentValue = 16, Flag = "WS", Callback = function(v) end })
-    local Dropdown = Tab:CreateDropdown({ Name = "Pilih Pemain", Options = {"Alice","Bob"}, CurrentOption = nil, Flag = "TP", Callback = function(optTbl) end })
-    Dropdown:Refresh({"Alice","Bob","Charlie"}, true) -- optional
-    YSUI:Notify({ Title = "Hello", Content = "World", Duration = 3 })
+-- Window
+function YSSHLibrary:CreateWindow(settings)
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "YSUI"
+    ScreenGui.Parent = game.CoreGui
 
-  Notes:
-    - This is an original implementation re‑creating a compatible API, not a copy.
-    - Requires exploit environment (CoreGui access, loadstring). Studio may block HttpGet/loadstring.
-    - Config saving uses writefile/readfile if available.
---]]
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 600, 0, 350)
+    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Parent = ScreenGui
 
-local Players = game:GetService("Players")
-local CoreGui = game:GetService("CoreGui")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local LocalPlayer = Players.LocalPlayer
+    local Topbar = Instance.new("Frame")
+    Topbar.Size = UDim2.new(1, 0, 0, 30)
+    Topbar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Topbar.BorderSizePixel = 0
+    Topbar.Parent = MainFrame
 
-local function isExecutor()
-  return (syn or KRNL_LOADED or identifyexecutor or writefile) ~= nil
-end
+    local Title = Instance.new("TextLabel")
+    Title.Text = settings.Name or "YSUI"
+    Title.Size = UDim2.new(1, -100, 1, 0)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.TextSize = 16
+    Title.Parent = Topbar
 
-local function safeWrap(fn)
-  return function(...)
-    local ok, err = pcall(fn, ...)
-    if not ok then warn("YSSH Error:", err) end
-  end
-end
+    -- Tombol Minimize
+    local MinimizeButton = Instance.new("TextButton")
+    MinimizeButton.Text = "-"
+    MinimizeButton.Font = Enum.Font.GothamBold
+    MinimizeButton.TextSize = 18
+    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
+    MinimizeButton.Position = UDim2.new(1, -60, 0, 0)
+    MinimizeButton.BackgroundTransparency = 1
+    MinimizeButton.TextColor3 = Color3.fromRGB(200,200,200)
+    MinimizeButton.Parent = Topbar
 
-local THEMES = {
-  Default = {
-    Bg = Color3.fromRGB(18, 18, 20),
-    Panel = Color3.fromRGB(24, 24, 28),
-    Topbar = Color3.fromRGB(28, 28, 34),
-    Accent = Color3.fromRGB(90, 139, 255),
-    Accent2 = Color3.fromRGB(120, 86, 255),
-    Text = Color3.fromRGB(230, 230, 235),
-    SubText = Color3.fromRGB(150, 150, 160),
-    Stroke = Color3.fromRGB(50, 50, 60),
-    Good = Color3.fromRGB(75, 200, 130),
-    Bad = Color3.fromRGB(255, 85, 115),
-  },
-}
-
-local function make(instance, props, children)
-  local obj = Instance.new(instance)
-  for k, v in pairs(props or {}) do obj[k] = v end
-  for _, child in ipairs(children or {}) do child.Parent = obj end
-  return obj
-end
-
-local function tween(o, ti, goal)
-  return TweenService:Create(o, ti, goal)
-end
-
-local function round(n, inc)
-  if not inc or inc <= 0 then return n end
-  return math.floor((n / inc) + 0.5) * inc
-end
-
-local function getKeyCodeFromString(s)
-  if typeof(s) == "EnumItem" and s.EnumType == Enum.KeyCode then return s end
-  if type(s) ~= "string" then return Enum.KeyCode.K end
-  local upper = s:upper()
-  if Enum.KeyCode[upper] then return Enum.KeyCode[upper] end
-  return Enum.KeyCode.K
-end
-
-local function joinPaths(...) return table.concat({...}, "/") end
-local function canSave()
-  return typeof(writefile) == "function" and typeof(isfile) == "function" and typeof(makefolder) == "function"
-end
-
-local function saveConfig(folder, file, data)
-  if not canSave() then return false end
-  local pathFolder = folder and ("YSSH/"..folder) or "YSSH"
-  local pathFile = joinPaths(pathFolder, (file or "config")..".json")
-  if not isfolder("YSSH") then makefolder("YSSH") end
-  if folder and not isfolder(pathFolder) then makefolder(pathFolder) end
-  local json = HttpService:JSONEncode(data)
-  writefile(pathFile, json)
-  return true
-end
-
-local function loadConfig(folder, file)
-  if not canSave() then return nil end
-  local pathFolder = folder and ("YSSH/"..folder) or "YSSH"
-  local pathFile = joinPaths(pathFolder, (file or "config")..".json")
-  if isfile(pathFile) then
-    local ok, decoded = pcall(function()
-      return HttpService:JSONDecode(readfile(pathFile))
+    local isMinimized = false
+    MinimizeButton.MouseButton1Click:Connect(function()
+        isMinimized = not isMinimized
+        for _, child in ipairs(MainFrame:GetChildren()) do
+            if child ~= Topbar then
+                child.Visible = not isMinimized
+            end
+        end
     end)
-    if ok then return decoded end
-  end
-  return nil
-end
 
-local YSSHLibrary = { Flags = {}, Theme = THEMES.Default }
+    -- Tombol Close
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Text = "X"
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.TextSize = 18
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -30, 0, 0)
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.TextColor3 = Color3.fromRGB(255,100,100)
+    CloseButton.Parent = Topbar
+    CloseButton.MouseButton1Click:Connect(function()
+        MainFrame:Destroy()
+    end)
+
+    -- Sidebar
+    local Sidebar = Instance.new("Frame")
+    Sidebar.Size = UDim2.new(0, 150, 1, -30)
+    Sidebar.Position = UDim2.new(0, 0, 0, 30)
+    Sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    Sidebar.BorderSizePixel = 0
+    Sidebar.Parent = MainFrame
+
+    local UIList = Instance.new("UIListLayout", Sidebar)
+    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+    UIList.Padding = UDim.new(0, 5)
+
+    -- TabContainer
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Size = UDim2.new(1, -150, 1, -30)
+    TabContainer.Position = UDim2.new(0, 150, 0, 30)
+    TabContainer.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    TabContainer.BorderSizePixel = 0
+    TabContainer.Parent = MainFrame
+
+    local window = {}
+    window.Tabs = {}
+
+    -- CreateTab
+    function window:CreateTab(name, icon)
+        local TabButton = Instance.new("TextButton")
+        TabButton.Text = name
+        TabButton.Size = UDim2.new(1, -10, 0, 30)
+        TabButton.BackgroundTransparency = 1
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.TextXAlignment = Enum.TextXAlignment.Left
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.TextSize = 16
+        TabButton.Parent = Sidebar
+
+        local tab = {}
+        tab.Container = Instance.new("Frame")
+        tab.Container.Size = UDim2.new(1, 0, 1, 0)
+        tab.Container.Visible = false
+        tab.Container.Parent = TabContainer
+
+        local UIList2 = Instance.new("UIListLayout", tab.Container)
+        UIList2.Padding = UDim.new(0, 5)
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, t in ipairs(window.Tabs) do
+                t.Container.Visible = false
+            end
+            tab.Container.Visible = true
+        end)
+
+        -- Button
+        function tab:CreateButton(data)
+            local button = Instance.new("TextButton")
+            button.Text = data.Name
+            button.Size = UDim2.new(0, 200, 0, 30)
+            button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            button.Font = Enum.Font.Gotham
+            button.TextSize = 14
+            button.Parent = tab.Container
+            button.MouseButton1Click:Connect(data.Callback)
+            return button
+        end
+
+        -- Toggle
+        function tab:CreateToggle(data)
+            local toggle = Instance.new("TextButton")
+            toggle.Text = "[ ] "..data.Name
+            toggle.Size = UDim2.new(0, 200, 0, 30)
+            toggle.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+            toggle.Font = Enum.Font.Gotham
+            toggle.TextSize = 14
+            toggle.Parent = tab.Container
+
+            local state = data.CurrentValue or false
+            local function update()
+                toggle.Text = (state and "[✔] " or "[ ] ")..data.Name
+            end
+            update()
+
+            toggle.MouseButton1Click:Connect(function()
+                state = not state
+                update()
+                if data.Callback then data.Callback(state) end
+            end)
+
+            return toggle
+        end
+
+        -- Slider
+        function tab:CreateSlider(data)
+            local sliderFrame = Instance.new("Frame")
+            sliderFrame.Size = UDim2.new(0, 200, 0, 40)
+            sliderFrame.BackgroundTransparency = 1
+            sliderFrame.Parent = tab.Container
+
+            local label = Instance.new("TextLabel")
+            label.Text = data.Name..": "..data.CurrentValue..(data.Suffix or "")
+            label.Size = UDim2.new(1, 0, 0, 20)
+            label.BackgroundTransparency = 1
+            label.TextColor3 = Color3.fromRGB(255,255,255)
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 14
+            label.Parent = sliderFrame
+
+            local slider = Instance.new("TextButton")
+            slider.Size = UDim2.new(1, 0, 0, 15)
+            slider.Position = UDim2.new(0, 0, 0, 20)
+            slider.BackgroundColor3 = Color3.fromRGB(80,80,80)
+            slider.Text = ""
+            slider.Parent = sliderFrame
+
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new((data.CurrentValue-data.Range[1])/(data.Range[2]-data.Range[1]), 0, 1, 0)
+            fill.BackgroundColor3 = Color3.fromRGB(0,170,255)
+            fill.BorderSizePixel = 0
+            fill.Parent = slider
+
+            local dragging = false
+            slider.MouseButton1Down:Connect(function()
+                dragging = true
+            end)
+            game:GetService("UserInputService").InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            game:GetService("RunService").RenderStepped:Connect(function()
+                if dragging then
+                    local mouse = game:GetService("UserInputService"):GetMouseLocation().X
+                    local rel = math.clamp((mouse - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+                    local value = math.floor(data.Range[1] + (data.Range[2]-data.Range[1]) * rel)
+                    label.Text = data.Name..": "..value..(data.Suffix or "")
+                    fill.Size = UDim2.new(rel,0,1,0)
+                    if data.Callback then data.Callback(value) end
+                end
+            end)
+        end
+
+        -- Dropdown
+        function tab:CreateDropdown(data)
+            local dropdown = Instance.new("TextButton")
+            dropdown.Text = data.Name.." ▼"
+            dropdown.Size = UDim2.new(0, 200, 0, 30)
+            dropdown.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            dropdown.TextColor3 = Color3.fromRGB(255,255,255)
+            dropdown.Font = Enum.Font.Gotham
+            dropdown.TextSize = 14
+            dropdown.Parent = tab.Container
+
+            local listFrame = Instance.new("Frame")
+            listFrame.Size = UDim2.new(0, 200, 0, 0)
+            listFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            listFrame.ClipsDescendants = true
+            listFrame.Parent = tab.Container
+
+            local layout = Instance.new("UIListLayout", listFrame)
+
+            local expanded = false
+            dropdown.MouseButton1Click:Connect(function()
+                expanded = not expanded
+                listFrame.Size = expanded and UDim2.new(0,200,0,#data.Options*25) or UDim2.new(0,200,0,0)
+            end)
+
+            for _,opt in ipairs(data.Options) do
+                local btn = Instance.new("TextButton")
+                btn.Text = opt
+                btn.Size = UDim2.new(1,0,0,25)
+                btn.BackgroundTransparency = 1
+                btn.TextColor3 = Color3.fromRGB(255,255,255)
+                btn.Parent = listFrame
+                btn.MouseButton1Click:Connect(function()
+                    if data.Callback then data.Callback({opt}) end
+                end)
+            end
+
+            return dropdown
+        end
+
+        table.insert(window.Tabs, tab)
+        return tab
+    end
+
+    return window
+end
 
 -- Notify
-function YSSHLibrary:Notify(opts)
-  opts = opts or {}
-  local title = opts.Title or "Notice"
-  local content = opts.Content or ""
-  local duration = tonumber(opts.Duration) or 3
-
-  local gui = CoreGui:FindFirstChild("YSSH_Notify") or make("ScreenGui", {Name = "YSSH_Notify", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling}, {})
-  gui.Parent = CoreGui
-
-  local holder = gui:FindFirstChild("Holder")
-  if not holder then
-    holder = make("Frame", {
-      Name = "Holder",
-      AnchorPoint = Vector2.new(1, 1),
-      Position = UDim2.new(1, -16, 1, -16),
-      Size = UDim2.new(0, 300, 0, 0),
-      BackgroundTransparency = 1,
-    }, {
-      make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8), VerticalAlignment = Enum.VerticalAlignment.Bottom }),
-    })
-    holder.Parent = gui
-  end
-
-  local card = make("Frame", {
-    BackgroundColor3 = self.Theme.Panel,
-    Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y,
-    ClipsDescendants = true,
-  }, {
-    make("UICorner", {CornerRadius = UDim.new(0, 10)}),
-    make("UIStroke", {Color = self.Theme.Stroke, Thickness = 1}),
-    make("UIPadding", {PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10), PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10)}),
-  })
-  card.Parent = holder
-
-  local titleLbl = make("TextLabel", {
-    BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    Text = title,
-    TextColor3 = self.Theme.Text,
-    TextSize = 14,
-    AutomaticSize = Enum.AutomaticSize.XY,
-  })
-  titleLbl.Parent = card
-
-  local contentLbl = make("TextLabel", {
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextWrapped = true,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    Text = content,
-    TextColor3 = self.Theme.SubText,
-    TextSize = 13,
-    Size = UDim2.new(1, 0, 0, 0),
-    AutomaticSize = Enum.AutomaticSize.Y,
-  })
-  contentLbl.Parent = card
-
-  card.Size = UDim2.new(1, 0, 0, 0)
-  tween(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 0, card.AbsoluteSize.Y + 20)}):Play()
-
-  task.spawn(function()
-    task.wait(duration)
-    local t = tween(card, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
-    t:Play(); t.Completed:Wait()
-    card:Destroy()
-  end)
-end
-
-local function makeDraggable(frame, dragArea)
-  dragArea = dragArea or frame
-  local dragging = false
-  local dragStart, startPos
-
-  local function update(input)
-    local delta = input.Position - dragStart
-    frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-  end
-
-  dragArea.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-      dragging = true
-      dragStart = input.Position
-      startPos = frame.Position
-      input.Changed:Connect(function()
-        if input.UserInputState == Enum.UserInputState.End then dragging = false end
-      end)
-    end
-  end)
-
-  dragArea.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-      if dragging then update(input) end
-    end
-  end)
-end
-
-function YSSHLibrary:CreateWindow(settings)
-  settings = settings or {}
-  if not isExecutor() and not settings.DisableBuildWarnings then
-    warn("[YSSH] Running outside exploit environment may break HttpGet/loadstring/CoreGui parenting.")
-  end
-
-  local themeKey = settings.Theme or "Default"
-  self.Theme = THEMES[themeKey] or THEMES.Default
-
-  local gui = make("ScreenGui", { Name = "YSSH_UI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Global })
-  gui.Parent = CoreGui
-
-  local main = make("Frame", {
-    Name = "Main",
-    Size = UDim2.new(0, 640, 0, 420),
-    Position = UDim2.new(0.5, -320, 0.5, -210),
-    BackgroundColor3 = self.Theme.Bg,
-    BorderSizePixel = 0,
-  }, {
-    make("UICorner", {CornerRadius = UDim.new(0, 12)}),
-    make("UIStroke", {Color = self.Theme.Stroke, Thickness = 1}),
-  })
-  main.Parent = gui
-
-  local topbar = make("Frame", {
-    Name = "Topbar",
-    Size = UDim2.new(1, 0, 0, 40),
-    BackgroundColor3 = self.Theme.Topbar,
-    BorderSizePixel = 0,
-  }, {
-    make("UICorner", {CornerRadius = UDim.new(0, 12)}),
-  })
-  topbar.Parent = main
-
-  local title = make("TextLabel", {
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, 16, 0, 0),
-    Size = UDim2.new(1, -32, 1, 0),
-    Font = Enum.Font.GothamBold,
-    Text = (settings.Name or settings.Title or "YSSH UI"),
-    TextColor3 = self.Theme.Text,
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Left,
-  })
-  title.Parent = topbar
-
-  local toggleHint = make("TextLabel", {
-    BackgroundTransparency = 1,
-    AnchorPoint = Vector2.new(1, 0),
-    Position = UDim2.new(1, -12, 0, 0),
-    Size = UDim2.new(0, 150, 1, 0),
-    Font = Enum.Font.Gotham,
-    --Text = "Toggle: "..(settings.ToggleUIKeybind or "K"),
-    TextColor3 = self.Theme.SubText,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Right,
-  })
-  toggleHint.Parent = topbar
-
-  -- Minimize & Close
-  local MinimizeButton = make("TextButton", {
-    Text = "-",
-    Font = Enum.Font.GothamBold,
-    TextSize = 18,
-    TextColor3 = self.Theme.Text,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(0, 30, 1, 0),
-    Position = UDim2.new(1, -60, 0, 0),
-  })
-  MinimizeButton.Parent = topbar
-
-  local isMinimized = false
-  MinimizeButton.MouseButton1Click:Connect(function()
-    isMinimized = not isMinimized
-    main.Size = isMinimized and UDim2.new(0, 640, 0, 40) or UDim2.new(0, 640, 0, 420)
-  end)
-
-  local CloseButton = make("TextButton", {
-    Text = "X",
-    Font = Enum.Font.GothamBold,
-    TextSize = 18,
-    TextColor3 = self.Theme.Bad,
-    BackgroundTransparency = 1,
-    Size = UDim2.new(0, 30, 1, 0),
-    Position = UDim2.new(1, -30, 0, 0),
-  })
-  CloseButton.Parent = topbar
-  CloseButton.MouseButton1Click:Connect(function() gui:Destroy() end)
-
-  makeDraggable(main, topbar)
-
-  -- Tabbar
-  local tabbar = make("Frame", {
-    Name = "Tabbar",
-    Position = UDim2.new(0, 0, 0, 40),
-    Size = UDim2.new(0, 170, 1, -40),
-    BackgroundColor3 = self.Theme.Panel,
-    BorderSizePixel = 0,
-  }, {
-    make("UIStroke", {Color = self.Theme.Stroke, Thickness = 1}),
-  })
-  tabbar.Parent = main
-
-  local tabList = make("Frame", {
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 1, 0),
-  }, {
-    make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 6) }),
-    make("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8) }),
-  })
-  tabList.Parent = tabbar
-
-  local content = make("Frame", {
-    Name = "Content",
-    Position = UDim2.new(0, 170, 0, 40),
-    Size = UDim2.new(1, -170, 1, -40),
-    BackgroundColor3 = self.Theme.Panel,
-    BorderSizePixel = 0,
-  }, {
-    make("UIStroke", {Color = self.Theme.Stroke, Thickness = 1}),
-  })
-  content.Parent = main
-
-  local pageFolder = make("Folder", {Name = "Pages"}, {})
-  pageFolder.Parent = content
-
-  local function switchTo(page)
-    for _, p in ipairs(pageFolder:GetChildren()) do
-      if p:IsA("Frame") then p.Visible = (p == page) end
-    end
-  end
-
-  -- Keybind toggle
-  local keycode = getKeyCodeFromString(settings.ToggleUIKeybind or "K")
-  local hidden = false
-  UserInputService.InputBegan:Connect(function(input, gpe)
-    if gpe then return end
-    if input.KeyCode == keycode then
-      hidden = not hidden
-      main.Visible = not hidden
-    end
-  end)
-
-  local config = nil
-  if settings.ConfigurationSaving and settings.ConfigurationSaving.Enabled then
-    config = loadConfig(settings.ConfigurationSaving.FolderName, settings.ConfigurationSaving.FileName) or {}
-    if config.Flags then
-      for k, v in pairs(config.Flags) do self.Flags[k] = v end
-    end
-  end
-
-  function window:CreateTab(name, iconId)
-    name = name or "Tab"
-    local tabBtn = make("TextButton", {
-      Size = UDim2.new(1, 0, 0, 34),
-      BackgroundColor3 = Color3.fromRGB(0,0,0),
-      BackgroundTransparency = 0.7,
-      Text = name,
-      Font = Enum.Font.Gotham,
-      TextColor3 = YSSHLibrary.Theme.Text,
-      TextSize = 14,
-      TextXAlignment = Enum.TextXAlignment.Left,
-      AutoButtonColor = false,
-    }, {
-      make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-      make("UIPadding", {PaddingLeft = UDim.new(0, 28)}),
-    })
-
-    if iconId and tonumber(iconId) then
-      local icon = make("ImageLabel", {
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://"..tostring(iconId),
-        Size = UDim2.new(0, 18, 0, 18),
-        Position = UDim2.new(0, 6, 0.5, -9),
-      })
-      icon.Parent = tabBtn
-      tabBtn.TextXAlignment = Enum.TextXAlignment.Left
-      tabBtn.Text = "      "..name
-    end
-
-    tabBtn.Parent = tabList
-
-    local page = make("Frame", {
-      Name = name,
-      Size = UDim2.new(1, -16, 1, -16),
-      Position = UDim2.new(0, 8, 0, 8),
-      BackgroundTransparency = 1,
-      Visible = false,
-    }, {
-      make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8) }),
-    })
-    page.Parent = pageFolder
-
-    local tabObj = {}
-
-    tabBtn.MouseButton1Click:Connect(function()
-      for _, b in ipairs(tabList:GetChildren()) do
-        if b:IsA("TextButton") then
-          tween(b, TweenInfo.new(0.15), {BackgroundTransparency = 0.7}):Play()
-        end
-      end
-      tween(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-      switchTo(page)
-    end)
-
-    -- Switch to first created tab by default
-    if #tabList:GetChildren() == 1 then
-      tabBtn.BackgroundTransparency = 0.3
-      page.Visible = true
-    end
-
-    -- Element builders
-    local function addCard(height)
-      local card = make("Frame", {
-        Size = UDim2.new(1, 0, 0, height),
-        BackgroundColor3 = YSSHLibrary.Theme.Bg,
-      }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 10)}),
-        make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-        make("UIPadding", {PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10), PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12)}),
-      })
-      card.Parent = page
-      return card
-    end
-
-    function tabObj:CreateButton(data)
-      data = data or {}
-      local card = addCard(44)
-      local btn = make("TextButton", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundColor3 = YSSHLibrary.Theme.Panel,
-        Text = data.Name or "Button",
-        Font = Enum.Font.Gotham,
-        TextSize = 14,
-        TextColor3 = YSSHLibrary.Theme.Text,
-        AutoButtonColor = false,
-      }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-      })
-      btn.Parent = card
-      btn.MouseButton1Click:Connect(safeWrap(function()
-        if data.Callback then data.Callback() end
-      end))
-      btn.MouseEnter:Connect(function() tween(btn, TweenInfo.new(0.12), {BackgroundTransparency = 0.1}):Play() end)
-      btn.MouseLeave:Connect(function() tween(btn, TweenInfo.new(0.12), {BackgroundTransparency = 0}):Play() end)
-      return btn
-    end
-
-    function tabObj:CreateToggle(data)
-      data = data or {}
-      local flag = data.Flag
-      local state = (flag and YSSHLibrary.Flags[flag])
-        or (data.CurrentValue == true)
-        or false
-
-      local card = addCard(50)
-      local lbl = make("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -70, 1, 0),
-        Position = UDim2.new(0, 0, 0, 0),
-        Font = Enum.Font.Gotham,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Text = data.Name or "Toggle",
-        TextColor3 = YSSHLibrary.Theme.Text,
-        TextSize = 14,
-      })
-      lbl.Parent = card
-
-      local sw = make("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -2, 0.5, 0),
-        Size = UDim2.new(0, 54, 0, 26),
-        BackgroundColor3 = state and YSSHLibrary.Theme.Accent or YSSHLibrary.Theme.Panel,
-      }, {
-        make("UICorner", {CornerRadius = UDim.new(1, 0)}),
-        make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-      })
-      sw.Parent = card
-
-      local knob = make("Frame", {
-        Size = UDim2.new(0, 22, 0, 22),
-        Position = UDim2.new(0, state and 30 or 2, 0, 2),
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-      }, {
-        make("UICorner", {CornerRadius = UDim.new(1, 0)}),
-      })
-      knob.Parent = sw
-
-      local function setState(v, fire)
-        state = v and true or false
-        YSSHLibrary.Flags[flag or (data.Name or "")] = state
-        tween(sw, TweenInfo.new(0.15), {BackgroundColor3 = state and YSSHLibrary.Theme.Accent or YSSHLibrary.Theme.Panel}):Play()
-        tween(knob, TweenInfo.new(0.15), {Position = UDim2.new(0, state and 30 or 2, 0, 2)}):Play()
-        if fire and data.Callback then safeWrap(data.Callback)(state) end
-      end
-
-      sw.InputBegan:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-          setState(not state, true)
-        end
-      end)
-
-      setState(state, false)
-      return setmetatable({}, { __index = { Set = setState } })
-    end
-
-    function tabObj:CreateSlider(data)
-      data = data or {}
-      local min, max = (data.Range and data.Range[1]) or 0, (data.Range and data.Range[2]) or 100
-      local inc = data.Increment or 1
-      local value = math.clamp(data.CurrentValue or min, min, max)
-      local suffix = data.Suffix or ""
-      local flag = data.Flag
-
-      local card = addCard(64)
-      local lbl = make("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 18),
-        Font = Enum.Font.Gotham,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Text = (data.Name or "Slider") .. " (" .. tostring(value) .. (suffix ~= "" and (" "..suffix) or "") .. ")",
-        TextColor3 = YSSHLibrary.Theme.Text,
-        TextSize = 14,
-      })
-      lbl.Parent = card
-
-      local bar = make("Frame", { Size = UDim2.new(1, 0, 0, 8), Position = UDim2.new(0, 0, 0, 28), BackgroundColor3 = YSSHLibrary.Theme.Panel }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 6)}),
-        make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-      })
-      bar.Parent = card
-
-      local fill = make("Frame", { Size = UDim2.new((value-min)/(max-min), 0, 1, 0), BackgroundColor3 = YSSHLibrary.Theme.Accent }, { make("UICorner", {CornerRadius = UDim.new(0, 6)}) })
-      fill.Parent = bar
-
-      local dragging = false
-
-      local function setValueFromX(x, fire)
-        local rel = math.clamp((x - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-        local raw = min + rel * (max - min)
-        local snapped = math.clamp(round(raw, inc), min, max)
-        value = snapped
-        YSSHLibrary.Flags[flag or (data.Name or "")] = value
-        lbl.Text = (data.Name or "Slider") .. " (" .. tostring(value) .. (suffix ~= "" and (" "..suffix) or "") .. ")"
-        fill.Size = UDim2.new((value-min)/(max-min), 0, 1, 0)
-        if fire and data.Callback then safeWrap(data.Callback)(value) end
-      end
-
-      bar.InputBegan:Connect(function(inp)
-        if inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch then
-          dragging = true
-          setValueFromX(inp.Position.X, true)
-        end
-      end)
-
-      UserInputService.InputChanged:Connect(function(inp)
-        if dragging and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
-          setValueFromX(inp.Position.X, true)
-        end
-      end)
-
-      UserInputService.InputEnded:Connect(function(inp)
-        if dragging and (inp.UserInputType == Enum.UserInputType.MouseButton1 or inp.UserInputType == Enum.UserInputType.Touch) then
-          dragging = false
-        end
-      end)
-
-      -- initialize
-      setValueFromX(bar.AbsolutePosition.X + bar.AbsoluteSize.X * ((value - min) / (max - min)), false)
-
-      return setmetatable({}, { __index = {
-        Set = function(_, v) setValueFromX(bar.AbsolutePosition.X + bar.AbsoluteSize.X * ((math.clamp(v, min, max) - min) / (max - min)), true) end
-      }})
-    end
-
-    function tabObj:CreateDropdown(data)
-      data = data or {}
-      local options = data.Options or {}
-      local current = data.CurrentOption
-      local flag = data.Flag
-
-      local card = addCard(44)
-      local btn = make("TextButton", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundColor3 = YSSHLibrary.Theme.Panel,
-        Text = (data.Name or "Dropdown") .. " ▾",
-        Font = Enum.Font.Gotham,
-        TextSize = 14,
-        TextColor3 = YSSHLibrary.Theme.Text,
-        AutoButtonColor = false,
-      }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-      })
-      btn.Parent = card
-
-      local listFrame = make("Frame", {
-        Visible = false,
-        BackgroundColor3 = YSSHLibrary.Theme.Panel,
-        Size = UDim2.new(1, 0, 0, 8 + (#options * 28)),
-        Position = UDim2.new(0, 0, 1, 4),
-        ZIndex = 5,
-      }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-        make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-        make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) }),
-        make("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6) }),
-      })
-      listFrame.Parent = card
-
-      local function applyChoice(choice)
-        current = { choice }
-        YSSHLibrary.Flags[flag or (data.Name or "")] = choice
-        btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
-        if data.Callback then safeWrap(data.Callback)(current) end
-      end
-
-      local function rebuild(opts, reset)
-        for _, c in ipairs(listFrame:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-        listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
-        for _, opt in ipairs(opts) do
-          local item = make("TextButton", {
-            Size = UDim2.new(1, -0, 0, 24),
-            BackgroundTransparency = 1,
-            Text = tostring(opt),
-            Font = Enum.Font.Gotham,
-            TextSize = 14,
-            TextColor3 = YSSHLibrary.Theme.Text,
-            AutoButtonColor = true,
-          })
-          item.Parent = listFrame
-          item.MouseButton1Click:Connect(function()
-            applyChoice(opt)
-            listFrame.Visible = false
-          end)
-        end
-        if reset then current = nil; btn.Text = (data.Name or "Dropdown") .. " ▾" end
-      end
-
-      btn.MouseButton1Click:Connect(function()
-        listFrame.Visible = not listFrame.Visible
-      end)
-
-      rebuild(options, true)
-      if type(current) == "table" and current[1] then applyChoice(current[1]) end
-
-      local api = {}
-      function api:Refresh(newOptions, reset)
-        options = newOptions or {}
-        rebuild(options, reset)
-      end
-      return api
-    end
-
-    return tabObj
-  end
-
-  -- Save flags on change (periodic)
-  if settings.ConfigurationSaving and settings.ConfigurationSaving.Enabled then
-    task.spawn(function()
-      while gui.Parent do
-        task.wait(2)
-        saveConfig(settings.ConfigurationSaving.FolderName, settings.ConfigurationSaving.FileName, { Flags = YSSHLibrary.Flags })
-      end
-    end)
-  end
-
-  return setmetatable(window, { __index = self })
+function YSSHLibrary:Notify(data)
+    local msg = Instance.new("Hint")
+    msg.Text = data.Title.." | "..data.Content
+    msg.Parent = game.CoreGui
+    task.delay(data.Duration or 3, function() msg:Destroy() end)
 end
 
 return YSSHLibrary
