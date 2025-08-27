@@ -39,7 +39,7 @@ local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 
-local function isExecutor() -- rough check for exploit env
+local function isExecutor()
   return (syn or KRNL_LOADED or identifyexecutor or writefile) ~= nil
 end
 
@@ -50,7 +50,6 @@ local function safeWrap(fn)
   end
 end
 
--- Theme presets
 local THEMES = {
   Default = {
     Bg = Color3.fromRGB(18, 18, 20),
@@ -66,7 +65,6 @@ local THEMES = {
   },
 }
 
--- Utilities
 local function make(instance, props, children)
   local obj = Instance.new(instance)
   for k, v in pairs(props or {}) do obj[k] = v end
@@ -91,11 +89,7 @@ local function getKeyCodeFromString(s)
   return Enum.KeyCode.K
 end
 
--- Persistence helpers
-local function joinPaths(...)
-  return table.concat({...}, "/")
-end
-
+local function joinPaths(...) return table.concat({...}, "/") end
 local function canSave()
   return typeof(writefile) == "function" and typeof(isfile) == "function" and typeof(makefolder) == "function"
 end
@@ -124,10 +118,9 @@ local function loadConfig(folder, file)
   return nil
 end
 
--- Library root
 local YSSHLibrary = { Flags = {}, Theme = THEMES.Default }
 
--- Notifications
+-- Notify
 function YSSHLibrary:Notify(opts)
   opts = opts or {}
   local title = opts.Title or "Notice"
@@ -197,7 +190,6 @@ function YSSHLibrary:Notify(opts)
   end)
 end
 
--- Drag helper
 local function makeDraggable(frame, dragArea)
   dragArea = dragArea or frame
   local dragging = false
@@ -226,10 +218,8 @@ local function makeDraggable(frame, dragArea)
   end)
 end
 
--- Build Window
 function YSSHLibrary:CreateWindow(settings)
   settings = settings or {}
-
   if not isExecutor() and not settings.DisableBuildWarnings then
     warn("[YSSH] Running outside exploit environment may break HttpGet/loadstring/CoreGui parenting.")
   end
@@ -237,22 +227,8 @@ function YSSHLibrary:CreateWindow(settings)
   local themeKey = settings.Theme or "Default"
   self.Theme = THEMES[themeKey] or THEMES.Default
 
-  -- ScreenGui
   local gui = make("ScreenGui", { Name = "YSSH_UI", ResetOnSpawn = false, ZIndexBehavior = Enum.ZIndexBehavior.Global })
   gui.Parent = CoreGui
-
-  -- Loading splash (simple)
-  if settings.LoadingTitle or settings.LoadingSubtitle then
-    local splash = make("Frame", {Size = UDim2.new(1,0,1,0), BackgroundColor3 = Color3.fromRGB(0,0,0), BackgroundTransparency = 0.2}, {
-      make("TextLabel", {Text = (settings.LoadingTitle or "Loading"), Font = Enum.Font.GothamBold, TextSize = 20, TextColor3 = Color3.new(1,1,1), BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.new(0.5,0,0.5,-12)}),
-      make("TextLabel", {Text = (settings.LoadingSubtitle or ""), Font = Enum.Font.Gotham, TextSize = 14, TextColor3 = Color3.fromRGB(220,220,220), BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5,0.5), Position = UDim2.new(0.5,0,0.5,12)}),
-    })
-    splash.Parent = gui
-    task.delay(0.6, function() if splash then splash:Destroy() end end)
-  end
-
-  -- Main Window
-  local window = {}
 
   local main = make("Frame", {
     Name = "Main",
@@ -266,7 +242,6 @@ function YSSHLibrary:CreateWindow(settings)
   })
   main.Parent = gui
 
-  -- Topbar
   local topbar = make("Frame", {
     Name = "Topbar",
     Size = UDim2.new(1, 0, 0, 40),
@@ -302,9 +277,39 @@ function YSSHLibrary:CreateWindow(settings)
   })
   toggleHint.Parent = topbar
 
+  -- Minimize & Close
+  local MinimizeButton = make("TextButton", {
+    Text = "-",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = self.Theme.Text,
+    BackgroundTransparency = 1,
+    Size = UDim2.new(0, 30, 1, 0),
+    Position = UDim2.new(1, -60, 0, 0),
+  })
+  MinimizeButton.Parent = topbar
+
+  local isMinimized = false
+  MinimizeButton.MouseButton1Click:Connect(function()
+    isMinimized = not isMinimized
+    main.Size = isMinimized and UDim2.new(0, 640, 0, 40) or UDim2.new(0, 640, 0, 420)
+  end)
+
+  local CloseButton = make("TextButton", {
+    Text = "X",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = self.Theme.Bad,
+    BackgroundTransparency = 1,
+    Size = UDim2.new(0, 30, 1, 0),
+    Position = UDim2.new(1, -30, 0, 0),
+  })
+  CloseButton.Parent = topbar
+  CloseButton.MouseButton1Click:Connect(function() gui:Destroy() end)
+
   makeDraggable(main, topbar)
 
-  -- Left tab bar
+  -- Tabbar
   local tabbar = make("Frame", {
     Name = "Tabbar",
     Position = UDim2.new(0, 0, 0, 40),
@@ -325,7 +330,6 @@ function YSSHLibrary:CreateWindow(settings)
   })
   tabList.Parent = tabbar
 
-  -- Right content area
   local content = make("Frame", {
     Name = "Content",
     Position = UDim2.new(0, 170, 0, 40),
@@ -353,30 +357,25 @@ function YSSHLibrary:CreateWindow(settings)
     if gpe then return end
     if input.KeyCode == keycode then
       hidden = not hidden
-      local goal = { BackgroundTransparency = hidden and 1 or 0 }
-      tween(main, TweenInfo.new(0.2), goal):Play()
       main.Visible = not hidden
     end
   end)
 
-  -- Config load
   local config = nil
   if settings.ConfigurationSaving and settings.ConfigurationSaving.Enabled then
     config = loadConfig(settings.ConfigurationSaving.FolderName, settings.ConfigurationSaving.FileName) or {}
-    -- Preload flags
     if config.Flags then
       for k, v in pairs(config.Flags) do self.Flags[k] = v end
     end
   end
 
-  -- Window object API
   function window:CreateTab(name, iconId)
     name = name or "Tab"
     local tabBtn = make("TextButton", {
-      Size = UDim2.new(1, -0, 0, 34),
+      Size = UDim2.new(1, 0, 0, 34),
       BackgroundColor3 = Color3.fromRGB(0,0,0),
       BackgroundTransparency = 0.7,
-      Text = "  "..name,
+      Text = name,
       Font = Enum.Font.Gotham,
       TextColor3 = YSSHLibrary.Theme.Text,
       TextSize = 14,
@@ -384,6 +383,7 @@ function YSSHLibrary:CreateWindow(settings)
       AutoButtonColor = false,
     }, {
       make("UICorner", {CornerRadius = UDim.new(0, 8)}),
+      make("UIPadding", {PaddingLeft = UDim.new(0, 28)}),
     })
 
     if iconId and tonumber(iconId) then
@@ -391,7 +391,7 @@ function YSSHLibrary:CreateWindow(settings)
         BackgroundTransparency = 1,
         Image = "rbxassetid://"..tostring(iconId),
         Size = UDim2.new(0, 18, 0, 18),
-        Position = UDim2.new(0, 8, 0.5, -9),
+        Position = UDim2.new(0, 6, 0.5, -9),
       })
       icon.Parent = tabBtn
       tabBtn.TextXAlignment = Enum.TextXAlignment.Left
