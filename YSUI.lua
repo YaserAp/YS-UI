@@ -27,19 +27,75 @@ function YSUI:CreateWindow(settings)
     Title.Font = Enum.Font.SourceSansBold
     Title.TextSize = 18
 
-    -- buat container untuk isi tab
+    -- Container isi tab
     local Content = Instance.new("Frame", Window)
     Content.Size = UDim2.new(1, -20, 1, -50)
     Content.Position = UDim2.new(0,10,0,40)
     Content.BackgroundTransparency = 1
 
-    -- kasih layout otomatis
     local Layout = Instance.new("UIListLayout", Content)
     Layout.Padding = UDim.new(0, 5)
 
+    -- ==========================================
+    -- Window Control: Close, Minimize, Hide
+    -- ==========================================
+    local CloseBtn = Instance.new("TextButton", Window)
+    CloseBtn.Size = UDim2.new(0,30,0,30)
+    CloseBtn.Position = UDim2.new(1,-35,0,0)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(150,0,0)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.new(1,1,1)
+    CloseBtn.Font = Enum.Font.SourceSansBold
+    CloseBtn.TextSize = 16
+    CloseBtn.MouseButton1Click:Connect(function()
+        ScreenGui:Destroy()
+    end)
+
+    local MinBtn = Instance.new("TextButton", Window)
+    MinBtn.Size = UDim2.new(0,30,0,30)
+    MinBtn.Position = UDim2.new(1,-70,0,0)
+    MinBtn.BackgroundColor3 = Color3.fromRGB(100,100,0)
+    MinBtn.Text = "-"
+    MinBtn.TextColor3 = Color3.new(1,1,1)
+    MinBtn.Font = Enum.Font.SourceSansBold
+    MinBtn.TextSize = 16
+
+    local minimized = false
+    MinBtn.MouseButton1Click:Connect(function()
+        minimized = not minimized
+        Content.Visible = not minimized
+    end)
+
+    local HideBtn = Instance.new("TextButton", Window)
+    HideBtn.Size = UDim2.new(0,30,0,30)
+    HideBtn.Position = UDim2.new(1,-105,0,0)
+    HideBtn.BackgroundColor3 = Color3.fromRGB(0,100,150)
+    HideBtn.Text = "H"
+    HideBtn.TextColor3 = Color3.new(1,1,1)
+    HideBtn.Font = Enum.Font.SourceSansBold
+    HideBtn.TextSize = 16
+
+    HideBtn.MouseButton1Click:Connect(function()
+        Window.Visible = false
+        local Restore = Instance.new("TextButton", ScreenGui)
+        Restore.Size = UDim2.new(0,100,0,40)
+        Restore.Position = UDim2.new(0,10,1,-50)
+        Restore.BackgroundColor3 = Color3.fromRGB(40,40,40)
+        Restore.Text = "Show UI"
+        Restore.TextColor3 = Color3.new(1,1,1)
+        Restore.Font = Enum.Font.SourceSans
+        Restore.TextSize = 16
+        Restore.MouseButton1Click:Connect(function()
+            Window.Visible = true
+            Restore:Destroy()
+        end)
+    end)
+
+    -- ==========================================
+    -- API untuk buat elemen
+    -- ==========================================
     local API = {}
 
-    -- contoh API: bikin tombol
     function API:CreateButton(text, callback)
         local btn = Instance.new("TextButton", Content)
         btn.Size = UDim2.new(1,0,0,40)
@@ -54,7 +110,6 @@ function YSUI:CreateWindow(settings)
         return btn
     end
 
-    -- contoh API: bikin toggle
     function API:CreateToggle(text, default, callback)
         local frame = Instance.new("Frame", Content)
         frame.Size = UDim2.new(1,0,0,40)
