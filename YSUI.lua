@@ -53,8 +53,8 @@ ContentFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 -- Tombol Show UI
 local ShowUIButton = Instance.new("TextButton", ScreenGui)
 ShowUIButton.Size = UDim2.new(0, 120, 0, 40)
-ShowUIButton.AnchorPoint = Vector2.new(0.5, 1) -- titik anchor di bawah tengah
-ShowUIButton.Position = UDim2.new(0.5, 0, 0.5, -60) -- pas di atas logo tengah
+ShowUIButton.AnchorPoint = Vector2.new(0.5, 0) 
+ShowUIButton.Position = UDim2.new(0.5, 0, 0.5, -100) 
 ShowUIButton.Text = "Show UI"
 ShowUIButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ShowUIButton.Visible = false
@@ -141,3 +141,4 @@ UserInputService.InputEnded:Connect(function(input)
 		frameDragging = false
 	end
 end)
+
