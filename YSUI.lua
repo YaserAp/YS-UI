@@ -14,11 +14,13 @@ MainFrame.Size = UDim2.new(0, 400, 0, 250)
 MainFrame.Position = UDim2.new(0.5, -200, 0.5, -125)
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.Visible = true
+MainFrame.Active = true -- penting untuk drag
 
 -- Title bar
 local TitleBar = Instance.new("Frame", MainFrame)
 TitleBar.Size = UDim2.new(1, 0, 0, 30)
 TitleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+TitleBar.Active = true
 
 local TitleLabel = Instance.new("TextLabel", TitleBar)
 TitleLabel.Size = UDim2.new(1, -60, 1, 0)
@@ -51,14 +53,12 @@ ContentFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 -- Tombol Show UI
 local ShowUIButton = Instance.new("TextButton", ScreenGui)
 ShowUIButton.Size = UDim2.new(0, 120, 0, 40)
-
--- pakai GuiInset biar nggak ketiban topbar Roblox
-local topInset = GuiService:GetGuiInset().Y
-ShowUIButton.Position = UDim2.new(0.5, -60, 0, topInset + 4)
-
+ShowUIButton.AnchorPoint = Vector2.new(0.5, 1) -- titik anchor di bawah tengah
+ShowUIButton.Position = UDim2.new(0.5, 0, 0.5, -60) -- pas di atas logo tengah
 ShowUIButton.Text = "Show UI"
 ShowUIButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 ShowUIButton.Visible = false
+ShowUIButton.Active = true
 
 -- === Functionalitas ===
 
@@ -111,5 +111,33 @@ end)
 UserInputService.InputEnded:Connect(function(input)
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
 		dragging = false
+	end
+end)
+
+-- === Drag MainFrame (lewat TitleBar) ===
+local frameDragging = false
+local frameMousePos, frameStartPos
+
+TitleBar.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		frameDragging = true
+		frameMousePos = input.Position
+		frameStartPos = MainFrame.Position
+	end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement and frameDragging then
+		local delta = input.Position - frameMousePos
+		MainFrame.Position = UDim2.new(
+			frameStartPos.X.Scale, frameStartPos.X.Offset + delta.X,
+			frameStartPos.Y.Scale, frameStartPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		frameDragging = false
 	end
 end)
