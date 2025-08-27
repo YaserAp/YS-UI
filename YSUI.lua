@@ -310,7 +310,7 @@ function YSSHLibrary:CreateWindow(settings)
     Size = UDim2.new(0, 20, 0, 20),
     BackgroundColor3 = self.Theme.Topbar,
     Font = Enum.Font.GothamBold,
-    Text = "_",
+    Text = "-",
     TextColor3 = self.Theme.Text,
     TextSize = 14,
     AutoButtonColor = false,
