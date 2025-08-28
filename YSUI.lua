@@ -466,6 +466,9 @@ function YSSHLibrary:CreateWindow(settings)
             page.Visible = true
     end
 
+        return tabObj
+    end
+
     -- Element builders
     local function addCard(height)
       local card = make("Frame", {
