@@ -617,128 +617,135 @@ function YSSHLibrary:CreateWindow(settings)
       }})
     end
 
-  function tabObj:CreateDropdown(data)
-      data = data or {}
-      local options = data.Options or {}
-      local current = data.CurrentOption
-      local flag = data.Flag
+    function tabObj:CreateDropdown(data)
+        data = data or {}
+        local options = data.Options or {}
+        local current = data.CurrentOption
+        local flag = data.Flag
 
-      local card = addCard(44)
-      local btn = make("TextButton", {
-          Size = UDim2.new(1, 0, 1, 0),
-          BackgroundColor3 = YSSHLibrary.Theme.Panel,
-          Text = (data.Name or "Dropdown") .. " ▾",
-          Font = Enum.Font.Gotham,
-          TextSize = 14,
-          -- ✅ Gunakan warna abu terang agar placeholder jelas
-          TextColor3 = Color3.fromRGB(220, 220, 220),
-          AutoButtonColor = false,
-      }, {
-          make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-      })
-      btn.Parent = card
+        local card = addCard(44)
+        local btn = make("TextButton", {
+            Size = UDim2.new(1, 0, 1, 0),
+            BackgroundColor3 = YSSHLibrary.Theme.Panel,
+            Text = (data.Name or "Dropdown") .. " ▾",
+            Font = Enum.Font.Gotham,
+            TextSize = 14,
+            TextColor3 = Color3.fromRGB(220, 220, 220), -- abu terang placeholder
+            AutoButtonColor = false,
+        }, {
+            make("UICorner", {CornerRadius = UDim.new(0, 8)}),
+        })
+        btn.Parent = card
 
-      local listFrame = make("ScrollingFrame", {
-          Visible = false,
-          BackgroundColor3 = Color3.fromRGB(35, 35, 40),
-          Size = UDim2.new(1, 0, 0, 150), 
-          Position = UDim2.new(0, 0, 1, 4),
-          ZIndex = 100,
-          BorderSizePixel = 0,
-          CanvasSize = UDim2.new(0,0,0,0), 
-          ScrollBarThickness = 4,
-          ScrollBarImageColor3 = Color3.fromRGB(120,120,120),
-      }, {
-          make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-          make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-          make("UIListLayout", { 
-              SortOrder = Enum.SortOrder.LayoutOrder, 
-              Padding = UDim.new(0, 4) 
-          }),
-          make("UIPadding", { 
-              PaddingTop = UDim.new(0, 4), 
-              PaddingBottom = UDim.new(0, 4), 
-              PaddingLeft = UDim.new(0, 6), 
-              PaddingRight = UDim.new(0, 6) 
-          }),
-      })
-      listFrame.Parent = card
+        -- 🔥 ScrollingFrame
+        local listFrame = make("ScrollingFrame", {
+            Visible = false,
+            BackgroundColor3 = Color3.fromRGB(35, 35, 40),
+            Size = UDim2.new(1, 0, 0, 150), -- tinggi max dropdown
+            Position = UDim2.new(0, 0, 1, 4),
+            ZIndex = 100,
+            BorderSizePixel = 0,
+            ScrollingDirection = Enum.ScrollingDirection.Y,
+            ScrollingEnabled = true,
+            Active = true,
+            CanvasSize = UDim2.new(0,0,0,0),
+            ScrollBarThickness = 4,
+            ScrollBarImageColor3 = Color3.fromRGB(120,120,120),
+        }, {
+            make("UICorner", {CornerRadius = UDim.new(0, 8)}),
+            make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
+            make("UIPadding", {
+                PaddingTop = UDim.new(0, 4),
+                PaddingBottom = UDim.new(0, 4),
+                PaddingLeft = UDim.new(0, 6),
+                PaddingRight = UDim.new(0, 6),
+            }),
+        })
+        listFrame.Parent = card
 
-      local function applyChoice(choice)
-          current = { choice }
-          YSSHLibrary.Flags[flag or (data.Name or "")] = choice
-          btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
-          btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-          if data.Callback then safeWrap(data.Callback)(current) end
-      end
+        -- layout untuk isi dropdown
+        local layout = make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) })
+        layout.Parent = listFrame
 
-      local function rebuild(opts, reset)
-          for _, c in ipairs(listFrame:GetChildren()) do 
-              if c:IsA("TextButton") then c:Destroy() end 
-          end
+        -- 🔥 auto-update CanvasSize biar scroll aktif
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            local pad = listFrame:FindFirstChildOfClass("UIPadding")
+            local extra = 0
+            if pad then
+                extra = pad.PaddingTop.Offset + pad.PaddingBottom.Offset
+            end
+            listFrame.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + extra)
+        end)
 
-          for _, opt in ipairs(opts) do
-              local item = make("TextButton", {
-                  Size = UDim2.new(1, 0, 0, 24),
-                  BackgroundTransparency = 0,
-                  BackgroundColor3 = Color3.fromRGB(45, 45, 55),
-                  Text = tostring(opt),
-                  Font = Enum.Font.GothamSemibold,
-                  TextSize = 14,
-                  TextColor3 = YSSHLibrary.Theme.Text,
-                  AutoButtonColor = true,
-                  ZIndex = 100,
-                  TextXAlignment = Enum.TextXAlignment.Left,
-              }, {
-                  make("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                  make("UIStroke", {Color = Color3.fromRGB(80, 80, 90), Thickness = 1}),
-                  make("UIPadding", { PaddingLeft = UDim.new(0, 8) })
-              })
-              item.Parent = listFrame
+        local function applyChoice(choice)
+            current = { choice }
+            YSSHLibrary.Flags[flag or (data.Name or "")] = choice
+            btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            if data.Callback then safeWrap(data.Callback)(current) end
+        end
 
-              -- hover effect
-              item.MouseEnter:Connect(function()
-                  item.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-                  item.TextColor3 = YSSHLibrary.Theme.Accent
-              end)
-              item.MouseLeave:Connect(function()
-                  item.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-                  item.TextColor3 = YSSHLibrary.Theme.Text
-              end)
+        local function rebuild(opts, reset)
+            for _, c in ipairs(listFrame:GetChildren()) do 
+                if c:IsA("TextButton") then c:Destroy() end 
+            end
 
-              item.MouseButton1Click:Connect(function()
-                  applyChoice(opt)
-                  listFrame.Visible = false
-              end)
-          end
+            for _, opt in ipairs(opts) do
+                local item = make("TextButton", {
+                    Size = UDim2.new(1, 0, 0, 24),
+                    BackgroundTransparency = 0,
+                    BackgroundColor3 = Color3.fromRGB(45, 45, 55),
+                    Text = tostring(opt),
+                    Font = Enum.Font.GothamSemibold,
+                    TextSize = 14,
+                    TextColor3 = YSSHLibrary.Theme.Text,
+                    AutoButtonColor = true,
+                    ZIndex = 100,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                }, {
+                    make("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                    make("UIStroke", {Color = Color3.fromRGB(80, 80, 90), Thickness = 1}),
+                    make("UIPadding", { PaddingLeft = UDim.new(0, 8) })
+                })
+                item.Parent = listFrame
 
-          -- ✅ Update canvas biar scroll aktif
-          local layout = listFrame:FindFirstChildOfClass("UIListLayout")
-          if layout then
-              listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 12)
-          end
+                -- efek hover
+                item.MouseEnter:Connect(function()
+                    item.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+                    item.TextColor3 = YSSHLibrary.Theme.Accent
+                end)
+                item.MouseLeave:Connect(function()
+                    item.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                    item.TextColor3 = YSSHLibrary.Theme.Text
+                end)
 
-          if reset then 
-              current = nil
-              btn.Text = (data.Name or "Dropdown") .. " ▾"
-              btn.TextColor3 = YSSHLibrary.Theme.SubText
-          end
-      end
+                item.MouseButton1Click:Connect(function()
+                    applyChoice(opt)
+                    listFrame.Visible = false
+                end)
+            end
 
-      btn.MouseButton1Click:Connect(function()
-          listFrame.Visible = not listFrame.Visible
-      end)
+            if reset then 
+                current = nil
+                btn.Text = (data.Name or "Dropdown") .. " ▾"
+                btn.TextColor3 = YSSHLibrary.Theme.SubText
+            end
+        end
 
-      rebuild(options, true)
-      if type(current) == "table" and current[1] then applyChoice(current[1]) end
+        btn.MouseButton1Click:Connect(function()
+            listFrame.Visible = not listFrame.Visible
+        end)
 
-      local api = {}
-      function api:Refresh(newOptions, reset)
-          options = newOptions or {}
-          rebuild(options, reset)
-      end
-      return api
-  end
+        rebuild(options, true)
+        if type(current) == "table" and current[1] then applyChoice(current[1]) end
+
+        local api = {}
+        function api:Refresh(newOptions, reset)
+            options = newOptions or {}
+            rebuild(options, reset)
+        end
+        return api
+    end
 
     return tabObj
   end
