@@ -638,17 +638,29 @@ function YSSHLibrary:CreateWindow(settings)
       })
       btn.Parent = card
 
-     local listFrame = make("Frame", {
+      local listFrame = make("ScrollingFrame", {
           Visible = false,
           BackgroundColor3 = Color3.fromRGB(35, 35, 40),
-          Size = UDim2.new(1, 0, 0, 8 + (#options * 28)),
+          Size = UDim2.new(1, 0, 0, 150), 
           Position = UDim2.new(0, 0, 1, 4),
-          ZIndex = 5,
+          ZIndex = 100,
+          BorderSizePixel = 0,
+          CanvasSize = UDim2.new(0,0,0,0), 
+          ScrollBarThickness = 4,
+          ScrollBarImageColor3 = Color3.fromRGB(120,120,120),
       }, {
           make("UICorner", {CornerRadius = UDim.new(0, 8)}),
           make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-          make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) }),
-          make("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6) }),
+          make("UIListLayout", { 
+              SortOrder = Enum.SortOrder.LayoutOrder, 
+              Padding = UDim.new(0, 4) 
+          }),
+          make("UIPadding", { 
+              PaddingTop = UDim.new(0, 4), 
+              PaddingBottom = UDim.new(0, 4), 
+              PaddingLeft = UDim.new(0, 6), 
+              PaddingRight = UDim.new(0, 6) 
+          }),
       })
       listFrame.Parent = card
 
@@ -700,6 +712,12 @@ function YSSHLibrary:CreateWindow(settings)
                   applyChoice(opt)
                   listFrame.Visible = false
               end)
+          end
+
+          -- ✅ update ukuran canvas biar scrollbar muncul
+          local layout = listFrame:FindFirstChildOfClass("UIListLayout")
+          if layout then
+              listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 12)
           end
 
           if reset then 
