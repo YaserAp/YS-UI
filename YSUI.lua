@@ -513,27 +513,36 @@ function YSSHLibrary:CreateWindow(settings)
 
   -- Scrolling container untuk button tab
   local tabScroll = make("ScrollingFrame", {
-    Name = "TabScroll",
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, 0, 1, 0),
-    CanvasSize = UDim2.new(0,0,0,0),
-    ScrollBarThickness = 6,
-    ScrollBarImageColor3 = Color3.fromRGB(120,120,120),
-    ScrollingDirection = Enum.ScrollingDirection.Y,
-    Active = true,
-    BorderSizePixel = 0,
+      Name = "TabScroll",
+      BackgroundTransparency = 1,
+      Size = UDim2.new(1, 0, 1, 0),
+      CanvasSize = UDim2.new(0, 0, 0, 0),
+      ScrollBarThickness = 6,
+      ScrollBarImageColor3 = Color3.fromRGB(120, 120, 120),
+      ScrollingDirection = Enum.ScrollingDirection.Y,
+      Active = true,
+      BorderSizePixel = 0,
   }, {})
+
   tabScroll.Parent = tabbar
 
   local tabList = make("Frame", {
-    BackgroundTransparency = 1,
-    Size = UDim2.new(1, -16, 0, 0),
-    Position = UDim2.new(0, 8, 0, 8),
-    AutomaticSize = Enum.AutomaticSize.Y,
+      BackgroundTransparency = 1,
+      Size = UDim2.new(1, -16, 0, 0),
+      Position = UDim2.new(0, 8, 0, 8),
+      AutomaticSize = Enum.AutomaticSize.Y,
   }, {
-    make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 6) }),
+      make("UIListLayout", { 
+          SortOrder = Enum.SortOrder.LayoutOrder, 
+          Padding = UDim.new(0, 6) 
+      }),
   })
   tabList.Parent = tabScroll
+
+  -- 🔥 Auto-update CanvasSize biar scroll aktif
+  tabList.UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+      tabScroll.CanvasSize = UDim2.new(0, 0, 0, tabList.UIListLayout.AbsoluteContentSize.Y + 20)
+  end)
 
   -- Auto CanvasSize untuk TabScroll
   local tabListLayout = tabList:FindFirstChildOfClass("UIListLayout")
