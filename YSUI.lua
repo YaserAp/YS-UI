@@ -656,7 +656,6 @@ function YSSHLibrary:CreateWindow(settings)
           current = { choice }
           YSSHLibrary.Flags[flag or (data.Name or "")] = choice
           btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
-          -- ✅ Setelah dipilih, tetap gunakan warna terang
           btn.TextColor3 = Color3.fromRGB(255, 255, 255)
           if data.Callback then safeWrap(data.Callback)(current) end
       end
@@ -669,13 +668,14 @@ function YSSHLibrary:CreateWindow(settings)
           for _, opt in ipairs(opts) do
               local item = make("TextButton", {
                   Size = UDim2.new(1, 0, 0, 24),
-                  BackgroundTransparency = 0,  -- ✅ pastikan background solid
-                  BackgroundColor3 = Color3.fromRGB(45, 45, 55), -- abu kontras biar beda dengan listFrame
+                  BackgroundTransparency = 0,  
+                  BackgroundColor3 = Color3.fromRGB(45, 45, 55), 
                   Text = tostring(opt),
                   Font = Enum.Font.Gotham,
                   TextSize = 14,
-                  TextColor3 = Color3.fromRGB(255, 255, 255), -- teks putih jelas
+                  TextColor3 = Color3.fromRGB(255, 255, 255), 
                   AutoButtonColor = true,
+                  ZIndex = 10,
               }, {
                   make("UICorner", {CornerRadius = UDim.new(0, 6)})
               })
