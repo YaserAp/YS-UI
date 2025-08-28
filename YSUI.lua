@@ -662,20 +662,34 @@ function YSSHLibrary:CreateWindow(settings)
       end
 
       local function rebuild(opts, reset)
-          for _, c in ipairs(listFrame:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
+          for _, c in ipairs(listFrame:GetChildren()) do 
+              if c:IsA("TextButton") then c:Destroy() end 
+          end
           listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
           for _, opt in ipairs(opts) do
               local item = make("TextButton", {
-                  Size = UDim2.new(1, -0, 0, 24),
-                  BackgroundTransparency = 1,
+                  Size = UDim2.new(1, 0, 0, 24),
+                  -- ✅ Beri background abu tua agar beda dengan panel
+                  BackgroundColor3 = Color3.fromRGB(40, 40, 45),
                   Text = tostring(opt),
                   Font = Enum.Font.Gotham,
                   TextSize = 14,
-                  -- ✅ Warna opsi dropdown putih jelas
+                  -- ✅ Teks putih supaya kontras
                   TextColor3 = Color3.fromRGB(255, 255, 255),
                   AutoButtonColor = true,
+              }, {
+                  make("UICorner", {CornerRadius = UDim.new(0, 6)})
               })
               item.Parent = listFrame
+
+              -- efek hover biar lebih jelas
+              item.MouseEnter:Connect(function()
+                  item.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+              end)
+              item.MouseLeave:Connect(function()
+                  item.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+              end)
+
               item.MouseButton1Click:Connect(function()
                   applyChoice(opt)
                   listFrame.Visible = false
@@ -684,11 +698,10 @@ function YSSHLibrary:CreateWindow(settings)
           if reset then 
               current = nil
               btn.Text = (data.Name or "Dropdown") .. " ▾"
-              -- ✅ Placeholder pakai abu terang biar tidak nyaru
               btn.TextColor3 = Color3.fromRGB(220, 220, 220)
           end
       end
-
+      
       btn.MouseButton1Click:Connect(function()
           listFrame.Visible = not listFrame.Visible
       end)
