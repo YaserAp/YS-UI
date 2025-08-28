@@ -655,10 +655,7 @@ function YSSHLibrary:CreateWindow(settings)
           current = { choice }
           YSSHLibrary.Flags[flag or (data.Name or "")] = choice
           btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
-          -- ===================================
-          -- PERBAIKAN DITAMBAHKAN DI SINI
           btn.TextColor3 = YSSHLibrary.Theme.Text 
-          -- ===================================
           if data.Callback then safeWrap(data.Callback)(current) end
       end
 
@@ -672,7 +669,11 @@ function YSSHLibrary:CreateWindow(settings)
                   Text = tostring(opt),
                   Font = Enum.Font.Gotham,
                   TextSize = 14,
-                  TextColor3 = YSSHLibrary.Theme.Text,
+                  -- =======================================================
+                  -- PERBAIKAN UTAMA ADA DI BARIS DI BAWAH INI
+                  -- Warna teks item di dalam daftar diubah menjadi putih cerah
+                  TextColor3 = Color3.fromRGB(255, 255, 255),
+                  -- =======================================================
                   AutoButtonColor = true,
               })
               item.Parent = listFrame
@@ -684,10 +685,7 @@ function YSSHLibrary:CreateWindow(settings)
           if reset then 
               current = nil
               btn.Text = (data.Name or "Dropdown") .. " ▾"
-              -- ===================================
-              -- PERBAIKAN JUGA DITAMBAHKAN DI SINI
               btn.TextColor3 = YSSHLibrary.Theme.Text
-              -- ===================================
           end
       end
 
