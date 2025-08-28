@@ -638,9 +638,9 @@ function YSSHLibrary:CreateWindow(settings)
       })
       btn.Parent = card
 
-      local listFrame = make("Frame", {
+     local listFrame = make("Frame", {
           Visible = false,
-          BackgroundColor3 = YSSHLibrary.Theme.Panel,
+          BackgroundColor3 = Color3.fromRGB(35, 35, 40),
           Size = UDim2.new(1, 0, 0, 8 + (#options * 28)),
           Position = UDim2.new(0, 0, 1, 4),
           ZIndex = 5,
@@ -669,13 +669,12 @@ function YSSHLibrary:CreateWindow(settings)
           for _, opt in ipairs(opts) do
               local item = make("TextButton", {
                   Size = UDim2.new(1, 0, 0, 24),
-                  -- ✅ Beri background abu tua agar beda dengan panel
-                  BackgroundColor3 = Color3.fromRGB(40, 40, 45),
+                  BackgroundTransparency = 0,  -- ✅ pastikan background solid
+                  BackgroundColor3 = Color3.fromRGB(45, 45, 55), -- abu kontras biar beda dengan listFrame
                   Text = tostring(opt),
                   Font = Enum.Font.Gotham,
                   TextSize = 14,
-                  -- ✅ Teks putih supaya kontras
-                  TextColor3 = Color3.fromRGB(255, 255, 255),
+                  TextColor3 = Color3.fromRGB(255, 255, 255), -- teks putih jelas
                   AutoButtonColor = true,
               }, {
                   make("UICorner", {CornerRadius = UDim.new(0, 6)})
@@ -701,7 +700,7 @@ function YSSHLibrary:CreateWindow(settings)
               btn.TextColor3 = Color3.fromRGB(220, 220, 220)
           end
       end
-      
+
       btn.MouseButton1Click:Connect(function()
           listFrame.Visible = not listFrame.Visible
       end)
