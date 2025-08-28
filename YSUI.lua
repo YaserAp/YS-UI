@@ -666,27 +666,33 @@ function YSSHLibrary:CreateWindow(settings)
           end
           listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
           for _, opt in ipairs(opts) do
-              local item = make("TextButton", {
-                  Size = UDim2.new(1, 0, 0, 24),
-                  BackgroundTransparency = 0,  
-                  BackgroundColor3 = Color3.fromRGB(45, 45, 55), 
-                  Text = tostring(opt),
-                  Font = Enum.Font.Gotham,
-                  TextSize = 14,
-                  TextColor3 = Color3.fromRGB(255, 255, 255), 
-                  AutoButtonColor = true,
-                  ZIndex = 10,
-              }, {
-                  make("UICorner", {CornerRadius = UDim.new(0, 6)})
-              })
+                local item = make("TextButton", {
+                    Size = UDim2.new(1, 0, 0, 24),
+                    BackgroundTransparency = 0,
+                    BackgroundColor3 = Color3.fromRGB(45, 45, 55),
+                    Text = tostring(opt),
+                    Font = Enum.Font.GothamSemibold,
+                    TextSize = 14,
+                    TextColor3 = Color3.fromRGB(255, 255, 255),
+                    AutoButtonColor = true,
+                    ZIndex = 2, -- ✅ cukup lebih tinggi dari listFrame (jangan terlalu tinggi)
+                    TextXAlignment = Enum.TextXAlignment.Left, -- ✅ teks rata kiri biar selalu jelas
+                }, {
+                    make("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                    make("UIStroke", {Color = Color3.fromRGB(80, 80, 90), Thickness = 1}),
+                    make("UIPadding", { PaddingLeft = UDim.new(0, 8) }) -- ✅ kasih jarak dari sisi kiri
+                })
+
               item.Parent = listFrame
 
               -- efek hover biar lebih jelas
               item.MouseEnter:Connect(function()
                   item.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+                  item.TextColor3 = Color3.fromRGB(255, 255, 180) -- kuning muda biar jelas pas hover
               end)
               item.MouseLeave:Connect(function()
-                  item.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+                  item.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
+                  item.TextColor3 = Color3.fromRGB(255, 255, 255)
               end)
 
               item.MouseButton1Click:Connect(function()
