@@ -1,35 +1,4 @@
---[[
-  YSUI.lua — YSSH Library (Rayfield‑style)
-  API (intended 1:1 where practical):
-    local YSUI = loadstring(game:HttpGet("<raw-url>/YSUI.lua"))()
-    local Window = YSUI:CreateWindow({
-      Name = "YS Script Hub",
-      Icon = 0,
-      LoadingTitle = "Loading...",
-      LoadingSubtitle = "by You",
-      ShowText = "YS",
-      Theme = "Default",
-      ToggleUIKeybind = "K",
-      DisableRayfieldPrompts = false,
-      DisableBuildWarnings = false,
-      ConfigurationSaving = { Enabled = true, FolderName = "YSSH", FileName = "config" },
-      Discord = { Enabled = false, Invite = "", RememberJoins = false },
-      KeySystem = false,
-      KeySettings = { Title = "", Subtitle = "", Note = "", FileName = "", SaveKey = true, GrabKeyFromSite = false, Key = {"Hello"} },
-    })
-
-    local Tab = Window:CreateTab("Player", 4483362458)
-    local Toggle = Tab:CreateToggle({ Name = "Infinite Jump", CurrentValue = false, Flag = "InfJump", Callback = function(v) end })
-    local Slider = Tab:CreateSlider({ Name = "WalkSpeed", Range = {1, 100}, Increment = 1, Suffix = "Speed", CurrentValue = 16, Flag = "WS", Callback = function(v) end })
-    local Dropdown = Tab:CreateDropdown({ Name = "Pilih Pemain", Options = {"Alice","Bob"}, CurrentOption = nil, Flag = "TP", Callback = function(optTbl) end })
-    Dropdown:Refresh({"Alice","Bob","Charlie"}, true) -- optional
-    YSUI:Notify({ Title = "Hello", Content = "World", Duration = 3 })
-
-  Notes:
-    - This is an original implementation re‑creating a compatible API, not a copy.
-    - Requires exploit environment (CoreGui access, loadstring). Studio may block HttpGet/loadstring.
-    - Config saving uses writefile/readfile if available.
---]]
+--copyright BY YSSH--
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -661,7 +630,7 @@ function YSSHLibrary:CreateWindow(settings)
         Text = (data.Name or "Dropdown") .. " ▾",
         Font = Enum.Font.Gotham,
         TextSize = 14,
-        TextColor3 = YSSHLibrary.Theme.Text,
+        TextColor3 = Color3.fromRGB(230, 230, 235),
         AutoButtonColor = false,
       }, {
         make("UICorner", {CornerRadius = UDim.new(0, 8)}),
