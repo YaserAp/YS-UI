@@ -676,17 +676,16 @@ function YSSHLibrary:CreateWindow(settings)
           for _, c in ipairs(listFrame:GetChildren()) do 
               if c:IsA("TextButton") then c:Destroy() end 
           end
-          listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
 
           for _, opt in ipairs(opts) do
               local item = make("TextButton", {
                   Size = UDim2.new(1, 0, 0, 24),
                   BackgroundTransparency = 0,
-                  BackgroundColor3 = Color3.fromRGB(45, 45, 55), -- background abu gelap
+                  BackgroundColor3 = Color3.fromRGB(45, 45, 55),
                   Text = tostring(opt),
                   Font = Enum.Font.GothamSemibold,
                   TextSize = 14,
-                  TextColor3 = YSSHLibrary.Theme.Text, -- ✅ pakai warna dari Theme
+                  TextColor3 = YSSHLibrary.Theme.Text,
                   AutoButtonColor = true,
                   ZIndex = 100,
                   TextXAlignment = Enum.TextXAlignment.Left,
@@ -695,17 +694,16 @@ function YSSHLibrary:CreateWindow(settings)
                   make("UIStroke", {Color = Color3.fromRGB(80, 80, 90), Thickness = 1}),
                   make("UIPadding", { PaddingLeft = UDim.new(0, 8) })
               })
-
               item.Parent = listFrame
 
-              -- efek hover biar jelas
+              -- hover effect
               item.MouseEnter:Connect(function()
-                  item.BackgroundColor3 = Color3.fromRGB(70, 70, 80) -- lebih terang
-                  item.TextColor3 = YSSHLibrary.Theme.Accent -- biru terang pas hover
+                  item.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+                  item.TextColor3 = YSSHLibrary.Theme.Accent
               end)
               item.MouseLeave:Connect(function()
                   item.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-                  item.TextColor3 = YSSHLibrary.Theme.Text -- balik ke putih default
+                  item.TextColor3 = YSSHLibrary.Theme.Text
               end)
 
               item.MouseButton1Click:Connect(function()
@@ -714,7 +712,7 @@ function YSSHLibrary:CreateWindow(settings)
               end)
           end
 
-          -- ✅ update ukuran canvas biar scrollbar muncul
+          -- ✅ Update canvas biar scroll aktif
           local layout = listFrame:FindFirstChildOfClass("UIListLayout")
           if layout then
               listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 12)
@@ -723,7 +721,7 @@ function YSSHLibrary:CreateWindow(settings)
           if reset then 
               current = nil
               btn.Text = (data.Name or "Dropdown") .. " ▾"
-              btn.TextColor3 = YSSHLibrary.Theme.SubText -- abu muda untuk placeholder
+              btn.TextColor3 = YSSHLibrary.Theme.SubText
           end
       end
 
