@@ -665,34 +665,35 @@ function YSSHLibrary:CreateWindow(settings)
               if c:IsA("TextButton") then c:Destroy() end 
           end
           listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
+
           for _, opt in ipairs(opts) do
-                local item = make("TextButton", {
-                    Size = UDim2.new(1, 0, 0, 24),
-                    BackgroundTransparency = 0,
-                    BackgroundColor3 = Color3.fromRGB(45, 45, 55),
-                    Text = tostring(opt),
-                    Font = Enum.Font.GothamSemibold,
-                    TextSize = 14,
-                    TextColor3 = Color3.fromRGB(255, 255, 255),
-                    AutoButtonColor = true,
-                    ZIndex = 2, -- ✅ cukup lebih tinggi dari listFrame (jangan terlalu tinggi)
-                    TextXAlignment = Enum.TextXAlignment.Left, -- ✅ teks rata kiri biar selalu jelas
-                }, {
-                    make("UICorner", {CornerRadius = UDim.new(0, 6)}),
-                    make("UIStroke", {Color = Color3.fromRGB(80, 80, 90), Thickness = 1}),
-                    make("UIPadding", { PaddingLeft = UDim.new(0, 8) }) -- ✅ kasih jarak dari sisi kiri
-                })
+              local item = make("TextButton", {
+                  Size = UDim2.new(1, 0, 0, 24),
+                  BackgroundTransparency = 0,
+                  BackgroundColor3 = Color3.fromRGB(45, 45, 55), -- background abu gelap
+                  Text = tostring(opt),
+                  Font = Enum.Font.GothamSemibold,
+                  TextSize = 14,
+                  TextColor3 = YSSHLibrary.Theme.Text, -- ✅ pakai warna dari Theme
+                  AutoButtonColor = true,
+                  ZIndex = 2,
+                  TextXAlignment = Enum.TextXAlignment.Left,
+              }, {
+                  make("UICorner", {CornerRadius = UDim.new(0, 6)}),
+                  make("UIStroke", {Color = Color3.fromRGB(80, 80, 90), Thickness = 1}),
+                  make("UIPadding", { PaddingLeft = UDim.new(0, 8) })
+              })
 
               item.Parent = listFrame
 
-              -- efek hover biar lebih jelas
+              -- efek hover biar jelas
               item.MouseEnter:Connect(function()
-                  item.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-                  item.TextColor3 = Color3.fromRGB(255, 255, 180) -- kuning muda biar jelas pas hover
+                  item.BackgroundColor3 = Color3.fromRGB(70, 70, 80) -- lebih terang
+                  item.TextColor3 = YSSHLibrary.Theme.Accent -- biru terang pas hover
               end)
               item.MouseLeave:Connect(function()
                   item.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-                  item.TextColor3 = Color3.fromRGB(255, 255, 255)
+                  item.TextColor3 = YSSHLibrary.Theme.Text -- balik ke putih default
               end)
 
               item.MouseButton1Click:Connect(function()
@@ -700,10 +701,11 @@ function YSSHLibrary:CreateWindow(settings)
                   listFrame.Visible = false
               end)
           end
+
           if reset then 
               current = nil
               btn.Text = (data.Name or "Dropdown") .. " ▾"
-              btn.TextColor3 = Color3.fromRGB(220, 220, 220)
+              btn.TextColor3 = YSSHLibrary.Theme.SubText -- abu muda untuk placeholder
           end
       end
 
