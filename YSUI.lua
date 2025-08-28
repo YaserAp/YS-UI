@@ -676,7 +676,7 @@ function YSSHLibrary:CreateWindow(settings)
                   TextSize = 14,
                   TextColor3 = YSSHLibrary.Theme.Text, -- ✅ pakai warna dari Theme
                   AutoButtonColor = true,
-                  ZIndex = 10,
+                  ZIndex = 100,
                   TextXAlignment = Enum.TextXAlignment.Left,
               }, {
                   make("UICorner", {CornerRadius = UDim.new(0, 6)}),
