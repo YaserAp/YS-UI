@@ -617,7 +617,7 @@ function YSSHLibrary:CreateWindow(settings)
       }})
     end
 
-    function tabObj:CreateDropdown(data)
+  function tabObj:CreateDropdown(data)
       data = data or {}
       local options = data.Options or {}
       local current = data.CurrentOption
@@ -625,63 +625,74 @@ function YSSHLibrary:CreateWindow(settings)
 
       local card = addCard(44)
       local btn = make("TextButton", {
-        Size = UDim2.new(1, 0, 1, 0),
-        BackgroundColor3 = YSSHLibrary.Theme.Panel,
-        Text = (data.Name or "Dropdown") .. " ▾",
-        Font = Enum.Font.Gotham,
-        TextSize = 14,
-        TextColor3 = Color3.fromRGB(230, 230, 235),
-        AutoButtonColor = false,
+          Size = UDim2.new(1, 0, 1, 0),
+          BackgroundColor3 = YSSHLibrary.Theme.Panel,
+          Text = (data.Name or "Dropdown") .. " ▾",
+          Font = Enum.Font.Gotham,
+          TextSize = 14,
+          TextColor3 = YSSHLibrary.Theme.Text,
+          AutoButtonColor = false,
       }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 8)}),
+          make("UICorner", {CornerRadius = UDim.new(0, 8)}),
       })
       btn.Parent = card
 
       local listFrame = make("Frame", {
-        Visible = false,
-        BackgroundColor3 = YSSHLibrary.Theme.Panel,
-        Size = UDim2.new(1, 0, 0, 8 + (#options * 28)),
-        Position = UDim2.new(0, 0, 1, 4),
-        ZIndex = 5,
+          Visible = false,
+          BackgroundColor3 = YSSHLibrary.Theme.Panel,
+          Size = UDim2.new(1, 0, 0, 8 + (#options * 28)),
+          Position = UDim2.new(0, 0, 1, 4),
+          ZIndex = 5,
       }, {
-        make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-        make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
-        make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) }),
-        make("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6) }),
+          make("UICorner", {CornerRadius = UDim.new(0, 8)}),
+          make("UIStroke", {Color = YSSHLibrary.Theme.Stroke, Thickness = 1}),
+          make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4) }),
+          make("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 4), PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 6) }),
       })
       listFrame.Parent = card
 
       local function applyChoice(choice)
-        current = { choice }
-        YSSHLibrary.Flags[flag or (data.Name or "")] = choice
-        btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
-        if data.Callback then safeWrap(data.Callback)(current) end
+          current = { choice }
+          YSSHLibrary.Flags[flag or (data.Name or "")] = choice
+          btn.Text = (data.Name or "Dropdown") .. ": " .. tostring(choice)
+          -- ===================================
+          -- PERBAIKAN DITAMBAHKAN DI SINI
+          btn.TextColor3 = YSSHLibrary.Theme.Text 
+          -- ===================================
+          if data.Callback then safeWrap(data.Callback)(current) end
       end
 
       local function rebuild(opts, reset)
-        for _, c in ipairs(listFrame:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-        listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
-        for _, opt in ipairs(opts) do
-          local item = make("TextButton", {
-            Size = UDim2.new(1, -0, 0, 24),
-            BackgroundTransparency = 1,
-            Text = tostring(opt),
-            Font = Enum.Font.Gotham,
-            TextSize = 14,
-            TextColor3 = YSSHLibrary.Theme.Text,
-            AutoButtonColor = true,
-          })
-          item.Parent = listFrame
-          item.MouseButton1Click:Connect(function()
-            applyChoice(opt)
-            listFrame.Visible = false
-          end)
-        end
-        if reset then current = nil; btn.Text = (data.Name or "Dropdown") .. " ▾" end
+          for _, c in ipairs(listFrame:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
+          listFrame.Size = UDim2.new(1, 0, 0, 8 + (#opts * 28))
+          for _, opt in ipairs(opts) do
+              local item = make("TextButton", {
+                  Size = UDim2.new(1, -0, 0, 24),
+                  BackgroundTransparency = 1,
+                  Text = tostring(opt),
+                  Font = Enum.Font.Gotham,
+                  TextSize = 14,
+                  TextColor3 = YSSHLibrary.Theme.Text,
+                  AutoButtonColor = true,
+              })
+              item.Parent = listFrame
+              item.MouseButton1Click:Connect(function()
+                  applyChoice(opt)
+                  listFrame.Visible = false
+              end)
+          end
+          if reset then 
+              current = nil
+              btn.Text = (data.Name or "Dropdown") .. " ▾"
+              -- ===================================
+              -- PERBAIKAN JUGA DITAMBAHKAN DI SINI
+              btn.TextColor3 = YSSHLibrary.Theme.Text
+              -- ===================================
+          end
       end
 
       btn.MouseButton1Click:Connect(function()
-        listFrame.Visible = not listFrame.Visible
+          listFrame.Visible = not listFrame.Visible
       end)
 
       rebuild(options, true)
@@ -689,11 +700,11 @@ function YSSHLibrary:CreateWindow(settings)
 
       local api = {}
       function api:Refresh(newOptions, reset)
-        options = newOptions or {}
-        rebuild(options, reset)
+          options = newOptions or {}
+          rebuild(options, reset)
       end
       return api
-    end
+  end
 
     return tabObj
   end
