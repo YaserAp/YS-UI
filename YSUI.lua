@@ -391,7 +391,7 @@ function YSSHLibrary:CreateWindow(settings)
 
   local window = {}
 
-  local MAIN_WIDTH = settings.Width or 520
+  local MAIN_WIDTH = settings.Width or 540
   local MAIN_HEIGHT = settings.Height or 315
 
   local main = make("Frame", {
@@ -1539,5 +1539,6 @@ end
 ----------------------------------------------------------------
 
 return YSSHLibrary
+
 
 
