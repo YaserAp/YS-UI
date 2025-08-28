@@ -378,79 +378,92 @@ function YSSHLibrary:CreateWindow(settings)
   end
 
   -- Window object API
-  function window:CreateTab(name, iconId)
-    name = name or "Tab"
-    local tabBtn = make("TextButton", {
-      Name = "TabButton",
-      Size = UDim2.new(1, 0, 0, 34),
-      BackgroundColor3 = Color3.fromRGB(0,0,0),
-      BackgroundTransparency = 0.7,
-      Text = "", -- Text will be handled by a separate label
-      Font = Enum.Font.Gotham,
-      TextColor3 = YSSHLibrary.Theme.Text,
-      TextSize = 14,
-      TextXAlignment = Enum.TextXAlignment.Left,
-      AutoButtonColor = false,
-    }, {
-      make("UICorner", {CornerRadius = UDim.new(0, 8)}),
-    })
+    function window:CreateTab(name, iconId)
+        name = name or "Tab"
+        local tabBtn = make("TextButton", {
+            Name = "TabButton",
+            Size = UDim2.new(1, 0, 0, 34),
+            BackgroundColor3 = Color3.fromRGB(0,0,0),
+            BackgroundTransparency = 0.7,
+            Text = "",
+            Font = Enum.Font.Gotham,
+            TextColor3 = YSSHLibrary.Theme.Text,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            AutoButtonColor = false,
+        }, {
+            make("UICorner", {CornerRadius = UDim.new(0, 8)}),
+        })
 
-    if iconId and tonumber(iconId) then
-      local icon = make("ImageLabel", {
-        Name = "Icon",
-        BackgroundTransparency = 1,
-        Image = "rbxassetid://"..tostring(iconId),
-        Size = UDim2.new(0, 18, 0, 18),
-        Position = UDim2.new(0, 12, 0.5, -9),
-      })
-      icon.Parent = tabBtn
+        if iconId and tonumber(iconId) then
+            local icon = make("ImageLabel", {
+                Name = "Icon",
+                BackgroundTransparency = 1,
+                Image = "rbxassetid://"..tostring(iconId),
+                Size = UDim2.new(0, 18, 0, 18),
+                Position = UDim2.new(0, 12, 0.5, -9),
+            })
+            icon.Parent = tabBtn
 
-      local label = make("TextLabel", {
-        Name = "Label",
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -42, 1, 0),
-        Position = UDim2.new(0, 40, 0, 0),
-        Font = Enum.Font.Gotham,
-        Text = name,
-        TextColor3 = YSSHLibrary.Theme.Text,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-      })
-      label.Parent = tabBtn
-    else
-      -- No icon, just use the button's text property with padding
-      tabBtn.Text = "    "..name
-    end
-
-    tabBtn.Parent = tabList
-
-    local page = make("Frame", {
-      Name = name,
-      Size = UDim2.new(1, -16, 1, -16),
-      Position = UDim2.new(0, 8, 0, 8),
-      BackgroundTransparency = 1,
-      Visible = false,
-    }, {
-      make("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 8) }),
-    })
-    page.Parent = pageFolder
-
-    local tabObj = {}
-
-    tabBtn.MouseButton1Click:Connect(function()
-      for _, b in ipairs(tabList:GetChildren()) do
-        if b:IsA("TextButton") then
-          tween(b, TweenInfo.new(0.15), {BackgroundTransparency = 0.7}):Play()
+            local label = make("TextLabel", {
+                Name = "Label",
+                BackgroundTransparency = 1,
+                Size = UDim2.new(1, -42, 1, 0),
+                Position = UDim2.new(0, 40, 0, 0),
+                Font = Enum.Font.Gotham,
+                Text = name,
+                TextColor3 = YSSHLibrary.Theme.Text,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left,
+            })
+            label.Parent = tabBtn
+        else
+            tabBtn.Text = "    "..name
         end
-      end
-      tween(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
-      switchTo(page)
-    end)
 
-    -- Switch to first created tab by default
-    if #tabList:GetChildren() == 1 then
-      tabBtn.BackgroundTransparency = 0.3
-      page.Visible = true
+        tabBtn.Parent = tabList
+
+        -- ✅ ScrollingFrame biar bisa discroll kalau isi terlalu banyak
+        local page = make("ScrollingFrame", {
+            Name = name,
+            Size = UDim2.new(1, -16, 1, -16),
+            Position = UDim2.new(0, 8, 0, 8),
+            BackgroundTransparency = 1,
+            Visible = false,
+            ScrollBarThickness = 6,
+            ScrollBarImageColor3 = Color3.fromRGB(130, 130, 130),
+            ScrollingDirection = Enum.ScrollingDirection.Y,
+            CanvasSize = UDim2.new(0,0,0,0),
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        }, {
+            make("UIListLayout", {
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 8)
+            }),
+            make("UIPadding", {
+                PaddingTop = UDim.new(0, 8),
+                PaddingBottom = UDim.new(0, 8),
+                PaddingLeft = UDim.new(0, 8),
+                PaddingRight = UDim.new(0, 8)
+            }),
+        })
+        page.Parent = pageFolder
+
+        local tabObj = {}
+
+        tabBtn.MouseButton1Click:Connect(function()
+            for _, b in ipairs(tabList:GetChildren()) do
+                if b:IsA("TextButton") then
+                    tween(b, TweenInfo.new(0.15), {BackgroundTransparency = 0.7}):Play()
+                end
+            end
+            tween(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.3}):Play()
+            switchTo(page)
+        end)
+
+        if #tabList:GetChildren() == 1 then
+            tabBtn.BackgroundTransparency = 0.3
+            page.Visible = true
     end
 
     -- Element builders
