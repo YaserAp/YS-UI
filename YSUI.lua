@@ -498,7 +498,7 @@ function YSSHLibrary:CreateWindow(settings)
   -- Left Tabbar (NOW SCROLLABLE)
   ----------------------------------------------------------------
 
-  local TABBAR_WIDTH = 180
+  local TABBAR_WIDTH = 140
 
   local tabbar = make("Frame", {
     Name = "Tabbar",
